@@ -20,7 +20,7 @@ def fire_coroutine_threadsafe(coro: Coroutine,
         raise RuntimeError('Cannot be called from within the event loop')
 
     if not coroutines.iscoroutine(coro):
-        raise TypeError('A coroutine object is required: %s' % coro)
+        raise TypeError(f'A coroutine object is required: {coro}')
 
     def callback() -> None:
         """Handle the firing of a coroutine."""

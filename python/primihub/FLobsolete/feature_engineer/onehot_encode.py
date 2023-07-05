@@ -31,8 +31,7 @@ class OneHotEncoder():
         if isinstance(idxs, int):
             return [idxs, ]
         elif isinstance(idxs, (tuple, list)):
-            idxs = list(idxs)
-            idxs.sort()
+            idxs = sorted(idxs)
             return idxs
         else:
             raise ValueError("idxs may be int | list | tuple")
@@ -46,9 +45,7 @@ class OneHotEncoder():
         for idx in idxs_nd:
             tmp_cats = np.unique(fit_data[:, [idx]])
             self.categories_.append(tmp_cats)
-            idxs_dict = {}
-            for idx, k in enumerate(tmp_cats):
-                idxs_dict[k] = idx
+            idxs_dict = {k: idx for idx, k in enumerate(tmp_cats)}
             cats_len.append(len(tmp_cats))
             cats_idxs.append(idxs_dict)
         self.cats_len, self.cats_idxs = cats_len, cats_idxs
@@ -57,23 +54,17 @@ class OneHotEncoder():
     def onehot_encode(self, trans_data, idxs2):
         for i, idx in enumerate(idxs2):
             tmp_eye = np.eye(self.cats_len[i])
-            oh_array = []
-            for cat in trans_data[:, idx]:
-                oh_array.append(tmp_eye[self.cats_idxs[i][cat]])
-            if i == 0:
-                oh_data = np.array(oh_array)
-            else:
-                oh_data = np.hstack([oh_data, oh_array])
+            oh_array = [tmp_eye[self.cats_idxs[i][cat]] for cat in trans_data[:, idx]]
+            oh_data = np.array(oh_array) if i == 0 else np.hstack([oh_data, oh_array])
         return oh_data.astype(int)
 
     def extend_cols(self, drop_idx, cat_idx, insert_idxs):
         postfixs = self.cats_idxs[cat_idx]
         prefix = self.columns[drop_idx]
-        ext_cols_name = []
-        for postfix in postfixs.keys():
-            ext_cols_name.append(str(prefix) + "_" + str(postfix))
+        ext_cols_name = [
+            f"{str(prefix)}_{str(postfix)}" for postfix in postfixs.keys()
+        ]
         self.columns = self.columns.drop(prefix)
-        assert len(insert_idxs) == len(insert_idxs)
         for idx, ext_col_name in zip(insert_idxs, ext_cols_name):
             self.columns = self.columns.insert(idx, ext_col_name)
 
@@ -93,7 +84,6 @@ class OneHotEncoder():
                 if self.columns.any():
                     self.extend_cols(idx, i, list(
                         range(idx, idx + self.cats_len[i])))
-            # stack onehot_encoded data at the tail position
             elif idx == raw_len-1:
                 return_data = np.hstack([return_data[:, :], ohed_data[:, list(
                     range(last_idx, last_idx + self.cats_len[i]))]])
@@ -101,21 +91,17 @@ class OneHotEncoder():
                     self.extend_cols(-1, i, list(
                         range(idx + last_idx - 1, idx + last_idx + self.cats_len[i] - 1)))
             else:
-                if i == 0:
-                    tmp_idx = idx
-                else:
-                    tmp_idx = idx + sum(self.cats_len[:i]) - i
+                tmp_idx = idx if i == 0 else idx + sum(self.cats_len[:i]) - i
                 return_data = np.hstack([return_data[:, :tmp_idx], ohed_data[:, list(
                     range(last_idx, last_idx + self.cats_len[i]))], return_data[:, tmp_idx:]])
                 if self.columns.any():
                     self.extend_cols(tmp_idx, i, list(
                         range(idx + last_idx, idx + last_idx + self.cats_len[i])))
             last_idx += self.cats_len[i]
-        if self.columns.any():
-            assert return_data.shape[1] == len(self.columns)
-            return pd.DataFrame(return_data, columns=self.columns)
-        else:
+        if not self.columns.any():
             return return_data
+        assert return_data.shape[1] == len(self.columns)
+        return pd.DataFrame(return_data, columns=self.columns)
 
     def __call__(self, fit_data, trans_data, idxs1, idxs2):
         """
@@ -145,9 +131,7 @@ class HorOneHotEncoder(OneHotEncoder):
             tmp_union = np.array([])
             for cat in cats:
                 tmp_union = np.union1d(tmp_union, cat)
-            idxs_dict = {}
-            for idx, k in enumerate(tmp_union):
-                idxs_dict[k] = idx
+            idxs_dict = {k: idx for idx, k in enumerate(tmp_union)}
             union_cats_len.append(len(tmp_union))
             union_cats_idxs.append(idxs_dict)
         return union_cats_len, union_cats_idxs

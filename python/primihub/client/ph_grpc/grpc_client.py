@@ -40,15 +40,17 @@ class GrpcClient(object):
         :rtype: _type_
         """
         client = WorkerClient(self.node, self.cert)
-        task_map = client.set_task_map(code=code.encode('utf-8'),
-                                       job_id=bytes(str(job_id), "utf-8"),
-                                       task_id=bytes(str(task_id), "utf-8"))
+        task_map = client.set_task_map(
+            code=code.encode('utf-8'),
+            job_id=bytes(job_id, "utf-8"),
+            task_id=bytes(task_id, "utf-8"),
+        )
 
-        request = client.push_task_request(intended_worker_id=b'1',
-                                           task=task_map,
-                                           sequence_number=random.randint(0, 9999),
-                                           client_processed_up_to=random.randint(0, 9999),
-                                           submit_client_id=bytes(str(submit_client_id), "utf-8")
-                                           )
-        res = client.submit_task(request)
-        return res
+        request = client.push_task_request(
+            intended_worker_id=b'1',
+            task=task_map,
+            sequence_number=random.randint(0, 9999),
+            client_processed_up_to=random.randint(0, 9999),
+            submit_client_id=bytes(submit_client_id, "utf-8"),
+        )
+        return client.submit_task(request)

@@ -110,9 +110,7 @@ def opt_paillier_decrypt_crt(pub, prv, cipher_text):
 
     decrypt_text = opt_paillier_c2py.opt_paillier_decrypt_crt_warpper(pub, prv, cipher_text)
 
-    decrypt_text_num = int(decrypt_text)
-
-    return decrypt_text_num
+    return int(decrypt_text)
 
 def opt_paillier_add(pub, op1_cipher_text, op2_cipher_text):
 

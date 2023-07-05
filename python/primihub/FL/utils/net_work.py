@@ -31,13 +31,13 @@ class GrpcClient:
         self.send_channel = self.link_context.getChannel(send_session)
 
     def send(self, key, val):
-        key = self.local_party + '_' + key
+        key = f'{self.local_party}_{key}'
         logger.info(f"Start send {key}")
         self.send_channel.send(key, pickle.dumps(val))
         logger.info(f"End send {key}")
 
     def recv(self, key):
-        key = self.remote_party + '_' + key
+        key = f'{self.remote_party}_{key}'
         logger.info(f"Start receive {key}")
         val = self.recv_channel.recv(key)
         logger.info(f"End receive {key}")
@@ -69,9 +69,7 @@ class MultiGrpcClients:
 
     def recv_all(self, key):
         logger.info("Start receive all")
-        result = []
-        for client in self.Clients.values():
-            result.append(client.recv(key))
+        result = [client.recv(key) for client in self.Clients.values()]
         logger.info("End receive all")
         return result
     

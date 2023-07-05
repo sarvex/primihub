@@ -27,10 +27,7 @@ class PreprocessBase:
         pass
 
     def fit(self, x):
-        if self.FL_type == 'V':
-            return self.Vfit(x)
-        else:
-            return self.Hfit(x)
+        return self.Vfit(x) if self.FL_type == 'V' else self.Hfit(x)
 
     def fit_transform(self, x):
         self.fit(x)

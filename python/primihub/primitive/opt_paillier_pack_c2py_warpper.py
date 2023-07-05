@@ -63,11 +63,7 @@ def opt_paillier_pack_decrypt_crt(pub, prv, pack_cipher_text):
 
     decrypt_text_list = opt_paillier_c2py.opt_paillier_pack_decrypt_crt_warpper(pub, prv, pack_cipher_text)
 
-    decrypt_text_num_list = []
-    for decrypt_text in decrypt_text_list:
-        decrypt_text_num_list.append(int(decrypt_text))
-
-    return decrypt_text_num_list
+    return [int(decrypt_text) for decrypt_text in decrypt_text_list]
 
 def opt_paillier_pack_add(pub, op1_pack_cipher_text, op2_pack_cipher_text):
 

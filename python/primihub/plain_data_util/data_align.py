@@ -42,17 +42,15 @@ class DataAlign:
     def parse_dataset_param(self):
         self_host_info = self.node_info.get(self.party_name, None)
         if self_host_info is None:
-          raise Exception("Party acces info for self is not found {}".format(self.party_name))
+            raise Exception(f"Party acces info for self is not found {self.party_name}")
         use_tls = 1 if self_host_info.use_tls else 0
-        service_addr = "{}:{}:{}".format(self_host_info.ip.decode(),
-                                        self_host_info.port,
-                                        use_tls)
+        service_addr = f"{self_host_info.ip.decode()}:{self_host_info.port}:{use_tls}"
         logger.info(service_addr)
         if not self.role_params:
-          raise Exception("no meta info found for {}".format(self.party_name))
+            raise Exception(f"no meta info found for {self.party_name}")
         # find detail of dataset
         data_access_info = self.role_params["data"]
-        logger.info("data_access_info: {}".format(data_access_info))
+        logger.info(f"data_access_info: {data_access_info}")
 
         local_meta_info = copy.deepcopy(self.role_params)
         local_meta_info["localdata_path"] = data_access_info
@@ -66,8 +64,9 @@ class DataAlign:
       self.filter_rows_with_intersect_ids(local_meta_info)
 
     def register_new_dataset(self, sever_address, dataset_type, dataset_path, dataset_id):
-        logger.info("register_new_dataset: {} {} {} {}".format(
-            sever_address, dataset_type, dataset_path, dataset_id))
+        logger.info(
+            f"register_new_dataset: {sever_address} {dataset_type} {dataset_path} {dataset_id}"
+        )
         register_dataset(sever_address, dataset_type, dataset_path, dataset_id)
 
 
@@ -101,8 +100,9 @@ class DataAlign:
             try:
                 cursor.execute(sql)
             except Exception as e:
-                logger.error("Run sql '{}...' failed, query range [{}, {}).".format(
-                    sql[0:-1], inner_start_index, inner_end_index))
+                logger.error(
+                    f"Run sql '{sql[:-1]}...' failed, query range [{inner_start_index}, {inner_end_index})."
+                )
                 logger.error(e)
                 raise e
             else:
@@ -119,8 +119,9 @@ class DataAlign:
             try:
                 cursor.execute(sql)
             except Exception as e:
-                logger.error("Run sql '{}...' failed, query range [{}, {}).".format(
-                    sql[0:100], inner_start_pos, inner_end_pos))
+                logger.error(
+                    f"Run sql '{sql[:100]}...' failed, query range [{inner_start_pos}, {inner_end_pos})."
+                )
                 logger.error(e)
                 raise e
             else:
@@ -129,9 +130,9 @@ class DataAlign:
         end_tm = datetime.now()
         diff_time = end_tm - start_tm
 
-        logger.info("Query id in range ({}, {}) finish, cost {} seconds.".format(
-            start_index, end_index,
-            diff_time.total_seconds()))
+        logger.info(
+            f"Query id in range ({start_index}, {end_index}) finish, cost {diff_time.total_seconds()} seconds."
+        )
 
         return result_list
 
@@ -145,7 +146,6 @@ class DataAlign:
                                     id_list,     # All intersect ids,
                                     columns):    # Column to query.
         index_base = curr_iter * batch_size * num_thread
-        result_list = []
         query_futs = []
 
         # Run query in thread pool.
@@ -176,6 +176,7 @@ class DataAlign:
 
             return None
         else:
+            result_list = []
             for fut in query_futs:
                 result_list.extend(fut.result())
 
@@ -208,30 +209,27 @@ class DataAlign:
         try:
             cursor.execute(sql)
         except Exception as e:
-            logger.error("Run sql 'desc {}' failed.".format(db_info["tableName"]))
+            logger.error(f"""Run sql 'desc {db_info["tableName"]}' failed.""")
             logger.error(e)
             raise e
         else:
-            table_columns = []
-            for col_info in cursor.fetchall():
-                table_columns.append(col_info[0])
-
+            table_columns = [col_info[0] for col_info in cursor.fetchall()]
             index_column = table_columns[meta_info["index"][0]]
             db_info["index_column"] = index_column
 
-            logger.info("The column corresponds to index {} is {}.".format(
-                meta_info["index"], index_column))
+            logger.info(
+                f'The column corresponds to index {meta_info["index"]} is {index_column}.'
+            )
 
-            selected_columns = []
-            for col_name in table_columns:
-                selected_columns.append(col_name)
+            selected_columns = list(table_columns)
+        logger.info(
+            f'Column name of table {db_info["tableName"]} is {selected_columns}.'
+        )
 
-        logger.info("Column name of table {} is {}.".format(db_info["tableName"], selected_columns))
-
-        selected_column_str = "`{}`".format(selected_columns[0])
+        selected_column_str = f"`{selected_columns[0]}`"
         for i in range(len(selected_columns) - 1):
-            new_str = "`{}`".format(selected_columns[i+1])
-            selected_column_str = selected_column_str + "," + new_str
+            new_str = f"`{selected_columns[i + 1]}`"
+            selected_column_str = f"{selected_column_str},{new_str}"
 
         # Collect all ids that PSI output.
         intersect_ids = []
@@ -239,11 +237,9 @@ class DataAlign:
             in_f = open(meta_info["psiPath"])
             reader = csv.reader(in_f)
             next(reader)
-            for id in reader:
-                intersect_ids.append(id[0])
+            intersect_ids.extend(id[0] for id in reader)
         except OSError as e:
-            logger.error("Open file {} for read failed.".format(
-                meta_info["psiPath"]))
+            logger.error(f'Open file {meta_info["psiPath"]} for read failed.')
             logger.error(e)
             raise e
 
@@ -252,8 +248,7 @@ class DataAlign:
         try:
             out_f = open(meta_info["outputPath"], "w")
         except OSError as e:
-            logger.error("Open file {} for write failed.".format(
-                meta_info["outputPath"]))
+            logger.error(f'Open file {meta_info["outputPath"]} for write failed.')
             logger.error(e)
             raise e
         else:
@@ -332,15 +327,15 @@ class DataAlign:
         in_f.close()
 
         if num_rows != len(intersect_ids):
-            raise RuntimeError("Expect query {} rows from mysql but mysql return {} rows, this should be a bug.".format(
-                len(intersect_ids), num_rows))
-        else:
-            new_dataset_id = meta_info["newDataSetId"]
-            host_address = meta_info["host_address"]
-            new_dataset_output_path = meta_info["outputPath"]
-            self.register_new_dataset(host_address, "CSV",
-                                new_dataset_output_path, new_dataset_id)
-            logger.info("Finish.")
+            raise RuntimeError(
+                f"Expect query {len(intersect_ids)} rows from mysql but mysql return {num_rows} rows, this should be a bug."
+            )
+        new_dataset_id = meta_info["newDataSetId"]
+        host_address = meta_info["host_address"]
+        new_dataset_output_path = meta_info["outputPath"]
+        self.register_new_dataset(host_address, "CSV",
+                            new_dataset_output_path, new_dataset_id)
+        logger.info("Finish.")
 
         return
 
@@ -368,7 +363,7 @@ class DataAlign:
 
         intersection_map = {}
         intersection_set = set()
-        intersection_list = list()
+        intersection_list = []
 
         with open(psi_path) as f:
             f_csv = csv.reader(f)
@@ -380,7 +375,7 @@ class DataAlign:
                 intersection_set.add(item)
                 intersection_list.append(item)
 
-        with open(old_dataset_path) as old_f, open(new_dataset_output_path, 'w') as new_f:
+        with (open(old_dataset_path) as old_f, open(new_dataset_output_path, 'w') as new_f):
             f_csv = csv.reader(old_f)
             header = next(f_csv)
             print(header)
@@ -395,21 +390,19 @@ class DataAlign:
                     psi_key = row[psi_index]
                 if psi_key not in intersection_set:
                     continue
+                if psi_key != intersection_list[0]:  # save to map
+                    intersection_map[psi_key] = row
                 else:
-                    if psi_key != intersection_list[0]:  # save to map
-                        intersection_map[psi_key] = row
-                    else:
-                        new_file_writer.writerow(row)
-                        del intersection_list[0]
-                    while True:
-                        if len(intersection_list) == 0:
-                            break
-                        psi_key = intersection_list[0]
-                        if psi_key in intersection_map:
-                            new_file_writer.writerow(intersection_map[psi_key])
-                            del intersection_list[0]
-                        else:
-                            break
+                    new_file_writer.writerow(row)
+                    del intersection_list[0]
+                while True:
+                    if not intersection_list:
+                        break
+                    psi_key = intersection_list[0]
+                    if psi_key not in intersection_map:
+                        break
+                    new_file_writer.writerow(intersection_map[psi_key])
+                    del intersection_list[0]
         self.register_new_dataset(host_address, "csv", new_dataset_output_path, new_dataset_id)
 
 
@@ -420,6 +413,5 @@ class DataAlign:
         elif dataset_model.lower() == "mysql":
             self.generate_new_datast_from_mysql(meta_info, thread_num)
         else:
-            raise RuntimeError(
-                "Don't support dataset model {} now.".format(dataset_model))
+            raise RuntimeError(f"Don't support dataset model {dataset_model} now.")
 

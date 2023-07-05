@@ -111,7 +111,7 @@ class LogisticRegressionHost(BaseModel):
                                          remote_parties=remote_parties,
                                          node_info=self.node_info,
                                          task_info=self.task_info)
-        
+
         # load model for prediction
         model_path = self.role_params['model_path']
         logger.info(f"model path: {model_path}")
@@ -122,8 +122,7 @@ class LogisticRegressionHost(BaseModel):
         origin_data = read_data(data_info=self.role_params['data'])
 
         x = origin_data.copy()
-        selected_column = modelFile['selected_column']
-        if selected_column:
+        if selected_column := modelFile['selected_column']:
             x = x[selected_column]
         id = modelFile['id']
         if id in x.columns:
@@ -153,7 +152,7 @@ class LogisticRegressionHost(BaseModel):
             'pred_prob': pred_prob,
             'pred_y': pred_y
         })
-        
+
         data_result = pd.concat([origin_data, result], axis=1)
         predict_path = self.role_params['predict_path']
         check_directory_exist(predict_path)
@@ -172,11 +171,7 @@ class Plaintext_Host:
     def send_output_dim(self, guest_channel):
         self.guest_channel = guest_channel
 
-        if self.model.multiclass:
-            output_dim = self.model.theta.shape[1]
-        else:
-            output_dim = 1
-
+        output_dim = self.model.theta.shape[1] if self.model.multiclass else 1
         guest_channel.send_all('output_dim', output_dim)
 
     def compute_z(self, x):
@@ -184,11 +179,10 @@ class Plaintext_Host:
         return self.model.compute_z(x, guest_z)
     
     def compute_regular_loss(self):
-        if self.model.alpha != 0:
-            guest_regular_loss = self.guest_channel.recv_all('guest_regular_loss')
-            return self.model.compute_regular_loss(guest_regular_loss)
-        else:
+        if self.model.alpha == 0:
             return 0.
+        guest_regular_loss = self.guest_channel.recv_all('guest_regular_loss')
+        return self.model.compute_regular_loss(guest_regular_loss)
         
     def train(self, x, y):
         z = self.compute_z(x)

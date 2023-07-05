@@ -88,9 +88,7 @@ def random_sample(df_g, top_rate=0.2, other_rate=0.2):
     assert sample_rate > 0 and sample_rate <= 1.0
     sample_num = int(len(all_ids) * sample_rate)
 
-    sample_ids = random.sample(all_ids, sample_num)
-
-    return sample_ids
+    return random.sample(all_ids, sample_num)
 
 
 def col_sample(feature_list, sample_ratio=0.3, threshold=30):
@@ -99,9 +97,7 @@ def col_sample(feature_list, sample_ratio=0.3, threshold=30):
 
     sample_num = int(len(feature_list) * sample_ratio)
 
-    sample_features = random.sample(feature_list, sample_num)
-
-    return sample_features
+    return random.sample(feature_list, sample_num)
 
 
 def atom_paillier_sum(items, pub_key, add_actors, limit=15):
@@ -118,9 +114,9 @@ def atom_paillier_sum(items, pub_key, add_actors, limit=15):
     inter_results = list(
         add_actors.map(lambda a, v: a.add.remote(v), items_list))
 
-    final_result = functools.reduce(
-        lambda x, y: opt_paillier_add(pub_key, x, y), inter_results)
-    return final_result
+    return functools.reduce(
+        lambda x, y: opt_paillier_add(pub_key, x, y), inter_results
+    )
 
 
 @ray.remote
@@ -161,9 +157,7 @@ class MyPandasBlockAccessor(PandasBlockAccessor):
             val = col.sum(skipna=ignore_nulls)
         else:
             val = atom_paillier_sum(col, pub_key, add_actors, limit=limit)
-        if pd.isnull(val):
-            return None
-        return val
+        return None if pd.isnull(val) else val
 
 
 class MyBlockAccessor(BlockAccessor):
@@ -188,8 +182,7 @@ class MyBlockAccessor(BlockAccessor):
             return MyPandasBlockAccessor(block)
 
         else:
-            raise TypeError("Not a block type: {} ({})".format(
-                block, type(block)))
+            raise TypeError(f"Not a block type: {block} ({type(block)})")
 
 
 class PallierSum(_AggregateOnKeyBase):
@@ -232,33 +225,31 @@ class PallierAdd(object):
         self.encrypted_proto = encrypted_proto
 
     def pai_add(self, items, min_num=3):
-        if self.encrypted_proto is not None:
-            nums = self.nums * min_num
-            if len(items) < nums:
-                return functools.reduce(
-                    lambda x, y: opt_paillier_add(self.pub, x, y), items)
-            N = int(len(items) / nums)
-            items_list = []
-
-            inter_results = []
-            for i in range(nums):
-                tmp_val = items[i * N:(i + 1) * N]
-                # tmp_add_actor = self.add_actors[i]
-                if i == (nums - 1):
-                    tmp_val = items[i * N:]
-                items_list.append(tmp_val)
-
-            inter_results = list(
-                self.add_actors.map(lambda a, v: a.add.remote(v), items_list))
-
-            final_result = functools.reduce(
-                lambda x, y: opt_paillier_add(self.pub, x, y), inter_results)
-            # final_results = ActorAdd.remote(self.pub, ray.get(inter_results)).add.remote()
-        else:
+        if self.encrypted_proto is None:
             # print("not encrypted for add")
-            final_result = sum(items)
+            return sum(items)
 
-        return final_result
+        nums = self.nums * min_num
+        if len(items) < nums:
+            return functools.reduce(
+                lambda x, y: opt_paillier_add(self.pub, x, y), items)
+        N = int(len(items) / nums)
+        items_list = []
+
+        inter_results = []
+        for i in range(nums):
+            tmp_val = items[i * N:(i + 1) * N]
+            # tmp_add_actor = self.add_actors[i]
+            if i == (nums - 1):
+                tmp_val = items[i * N:]
+            items_list.append(tmp_val)
+
+        inter_results = list(
+            self.add_actors.map(lambda a, v: a.add.remote(v), items_list))
+
+        return functools.reduce(
+            lambda x, y: opt_paillier_add(self.pub, x, y), inter_results
+        )
 
 
 def goss_sample(df_g, top_rate=0.2, other_rate=0.2):
@@ -289,8 +280,7 @@ def random_sample(df_g, top_rate=0.2, other_rate=0.2):
     assert sample_rate > 0 and sample_rate <= 1.0
     sample_num = int(len(all_ids) * sample_rate)
 
-    sample_ids = random.sample(all_ids, sample_num)
-    return sample_ids
+    return random.sample(all_ids, sample_num)
 
 
 def search_best_splits(X: pd.DataFrame,
@@ -358,8 +348,7 @@ def search_best_splits(X: pd.DataFrame,
         tmp_col = X[item]
 
         if len(tmp_splits) < 1:
-            logging.info("current item is {} and split_point is {}".format(
-                item, split_points))
+            logging.info(f"current item is {item} and split_point is {split_points}")
             # print("current item ", item, split_points)
             continue
 
@@ -473,10 +462,10 @@ class MapGH(object):
         if isinstance(self.col, pd.DataFrame) or isinstance(self.g, pd.Series):
             self.col = self.col.values
 
-        if isinstance(self.g, pd.DataFrame) or isinstance(self.g, pd.Series):
+        if isinstance(self.g, (pd.DataFrame, pd.Series)):
             self.g = self.g.values
 
-        if isinstance(self.h, pd.DataFrame) or isinstance(self.h, pd.Series):
+        if isinstance(self.h, (pd.DataFrame, pd.Series)):
             self.h = self.h.values
 
         G_lefts = []
@@ -498,7 +487,7 @@ class MapGH(object):
 
             if self.min_child_sample:
                 if (less_sum < self.min_child_sample) \
-                        | (great_sum < self.min_child_sample):
+                            | (great_sum < self.min_child_sample):
                     continue
 
             G_left_g = self.g[flag].tolist()
@@ -552,16 +541,16 @@ class ReduceGH(object):
             global_vars += tmp_var
             global_cuts += tmp_cut
 
-        GH = pd.DataFrame({
-            'G_left': global_g_left,
-            'G_right': global_g_right,
-            'H_left': global_h_left,
-            'H_right': global_h_right,
-            'var': global_vars,
-            'cut': global_cuts
-        })
-
-        return GH
+        return pd.DataFrame(
+            {
+                'G_left': global_g_left,
+                'G_right': global_g_right,
+                'H_left': global_h_left,
+                'H_right': global_h_right,
+                'var': global_vars,
+                'cut': global_cuts,
+            }
+        )
 
 
 class VGBTBase(BaseModel):
@@ -636,7 +625,7 @@ class VGBTBase(BaseModel):
         pass
 
     def get_outputs(self):
-        return dict()
+        return {}
 
     def get_status(self):
         return {}
@@ -685,7 +674,6 @@ class VGBTHost(VGBTBase):
         ])
 
     def gh_sums_decrypted_with_ray(self, gh_sums_dict, plain_gh_sums):
-        sum_col = ['sum(g)', 'sum(h)']
         G_lefts = []
         G_rights = []
         H_lefts = []
@@ -693,6 +681,7 @@ class VGBTHost(VGBTBase):
         cuts = []
         vars = []
         if self.encrypt_pool is not None:
+            sum_col = ['sum(g)', 'sum(h)']
             for key, val in gh_sums_dict.items():
                 if self.merge_gh:
                     m = len(val)
@@ -712,11 +701,6 @@ class VGBTHost(VGBTBase):
                     tmp_g_lefts = val['g'].cumsum()
                     tmp_h_lefts = val['h'].cumsum()
 
-                    G_lefts += tmp_g_lefts.values.tolist()
-                    H_lefts += tmp_h_lefts.values.tolist()
-                    vars += tmp_var
-                    cuts += tmp_cut
-
                 else:
                     m, n = val.shape
                     tmp_var = [key] * m
@@ -732,14 +716,14 @@ class VGBTHost(VGBTBase):
                     tmp_g_lefts = cumsum_val['sum(g)']
                     tmp_h_lefts = cumsum_val['sum(h)']
 
-                    G_lefts += tmp_g_lefts.values.tolist()
-                    H_lefts += tmp_h_lefts.values.tolist()
-                    vars += tmp_var
-                    cuts += tmp_cut
+                G_lefts += tmp_g_lefts.values.tolist()
+                H_lefts += tmp_h_lefts.values.tolist()
+                vars += tmp_var
+                cuts += tmp_cut
 
-                # encrypted_sums = val[sum_col]
-                # m, n = encrypted_sums.shape
-                # encrypted_sums_flat = encrypted_sums.values.flatten()
+                        # encrypted_sums = val[sum_col]
+                        # m, n = encrypted_sums.shape
+                        # encrypted_sums_flat = encrypted_sums.values.flatten()
         else:
             for key, val in gh_sums_dict.items():
                 m, n = val.shape
@@ -968,36 +952,35 @@ class VGBTHost(VGBTBase):
         m, n = gh.shape
         if m < self.samples_clip_size:
             return gh
+        if self.sample_type == "random":
+            sample_ids = random_sample(gh,
+                                       top_rate=self.large_grads_ratio,
+                                       other_rate=self.small_grads_ratio)
+            return gh.iloc[sample_ids]
+        elif self.sample_type == "goss":
+            top_ids, low_ids = goss_sample(
+                gh,
+                top_rate=self.large_grads_ratio,
+                other_rate=self.small_grads_ratio)
+
+            amply_rate = (1 -
+                          self.large_grads_ratio) / self.small_grads_ratio
+
+            gh['g'][low_ids] *= amply_rate
+            sample_ids = top_ids + low_ids
+
+            return gh.iloc[sample_ids]
+
         else:
-            if self.sample_type == "random":
-                sample_ids = random_sample(gh,
-                                           top_rate=self.large_grads_ratio,
-                                           other_rate=self.small_grads_ratio)
-                return gh.iloc[sample_ids]
-            elif self.sample_type == "goss":
-                top_ids, low_ids = goss_sample(
-                    gh,
-                    top_rate=self.large_grads_ratio,
-                    other_rate=self.small_grads_ratio)
-
-                amply_rate = (1 -
-                              self.large_grads_ratio) / self.small_grads_ratio
-
-                gh['g'][low_ids] *= amply_rate
-                sample_ids = top_ids + low_ids
-
-                return gh.iloc[sample_ids]
-
-            else:
-                return gh
+            return gh
 
     def guest_best_cut(self, guest_gh_sums):
         best_gain = 0.001
         if guest_gh_sums.empty:
             return None
         guest_gh_sums['gain'] = guest_gh_sums['G_left'] ** 2 / (guest_gh_sums['H_left'] + self.reg_lambda) + \
-                guest_gh_sums['G_right'] ** 2 / (guest_gh_sums['H_right'] + self.reg_lambda) - \
-                (guest_gh_sums['G_left'] + guest_gh_sums['G_right']) ** 2 / (
+                    guest_gh_sums['G_right'] ** 2 / (guest_gh_sums['H_right'] + self.reg_lambda) - \
+                    (guest_gh_sums['G_left'] + guest_gh_sums['G_right']) ** 2 / (
                 guest_gh_sums['H_left'] + guest_gh_sums['H_right'] + + self.reg_lambda)
 
         guest_gh_sums['gain'] = guest_gh_sums['gain'] / 2 - self.gamma
@@ -1009,10 +992,7 @@ class VGBTHost(VGBTBase):
 
         max_gain = max_item['gain']
 
-        if max_gain > best_gain:
-            return max_item
-
-        return None
+        return max_item if max_gain > best_gain else None
 
     def host_tree_construct(self, X_host, f_t, current_depth, gh):
         m, n = X_host.shape

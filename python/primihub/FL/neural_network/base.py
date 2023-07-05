@@ -36,10 +36,9 @@ def choose_loss_fn(output_dim, task):
             return torch.nn.CrossEntropyLoss()
     if task == 'regression':
         return torch.nn.MSELoss()
-    else:
-        error_msg = f"Unsupported task: {task}"
-        logger.error(error_msg)
-        raise RuntimeError(error_msg)
+    error_msg = f"Unsupported task: {task}"
+    logger.error(error_msg)
+    raise RuntimeError(error_msg)
 
 
 def choose_optimizer(model, optimizer, learning_rate, alpha):

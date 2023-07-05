@@ -13,8 +13,7 @@ def handle_mixed_column(col):
     index_list = []
     for index, val in col.items():
         if val is None:
-            logger.info("Column {} index {} has empty value.".format(
-                col.name, index))
+            logger.info(f"Column {col.name} index {index} has empty value.")
             continue
 
         try:
@@ -24,43 +23,35 @@ def handle_mixed_column(col):
         except:
             index_list.append(index)
 
-    if len(index_list) != 0 and col_sum != 0:
+    if index_list and col_sum != 0:
         col_avg = col_sum / col_count
         for index in index_list:
-            logger.info("Replace {} with {}, column {}, index {}.".format(
-                col[index], col_avg, col.name, index))
+            logger.info(
+                f"Replace {col[index]} with {col_avg}, column {col.name}, index {index}."
+            )
             col[index] = str(col_avg)
     else:
-        logger.info(
-            "Skip column {} due to only missing value in it.".format(col.name))
+        logger.info(f"Skip column {col.name} due to only missing value in it.")
 
 
 def handle_abnormal_value_for_csv(path_or_info, col_info):
     df = pd.read_csv(path_or_info)
     df.info(verbose=True)
-    
+
     logger.info(col_info)
 
     for col_name, type in col_info.items():
-        if type == 1 or type == 2 or type == 3:
+        if type in [1, 2, 3]:
             col = df[col_name]
             if col.dtype == object:
                 handle_mixed_column(col)
-            if type == 1 or type == 3:
-                df[col_name] = col.astype("int")
-            else:
-                df[col_name] = col.astype("float") 
-    
+            df[col_name] = col.astype("int") if type in [1, 3] else col.astype("float")
     df = df.fillna("NA")
     return df
 
 
 def replace_illegal_string(col_val, col_name, col_type):
-    if col_type == 2:
-        convert_fn = float
-    else:
-        convert_fn = int
-
+    convert_fn = float if col_type == 2 else int
     col_sum = 0
     count = 0
     index = 0
@@ -69,17 +60,17 @@ def replace_illegal_string(col_val, col_name, col_type):
 
     for val in col_val:
         if val[0] is None:
-            logger.warning("Column {} index {} has empty value null.".format(col_name, index))
+            logger.warning(f"Column {col_name} index {index} has empty value null.")
             new_col_val.append("NA")
             index = index + 1
             continue
 
         if val[0] == "":
-            logger.warning("Column {} index {} has empty value ''.".format(col_name, index))
+            logger.warning(f"Column {col_name} index {index} has empty value ''.")
             new_col_val.append("NA")
             index = index + 1
             continue
-        
+
         try:
             tmp = convert_fn(val[0])
             col_sum = col_sum + tmp 
@@ -88,19 +79,18 @@ def replace_illegal_string(col_val, col_name, col_type):
         except Exception as e:
             index_list.append(index)
             new_col_val.append(val[0])
-            logger.error("Can't convert string {} into number at column {} index {}, plan to replace it.".format(
-                val[0], col_name, index))
+            logger.error(
+                f"Can't convert string {val[0]} into number at column {col_name} index {index}, plan to replace it."
+            )
 
         index = index + 1
 
-    if len(index_list) != 0:
-        if col_type == 2:
-            col_avg = col_sum / count
-        else:
-            col_avg = col_sum // count
-
+    if index_list:
+        col_avg = col_sum / count if col_type == 2 else col_sum // count
         for index in index_list:
-            logger.info("Replace column {} index {}'s origin value {} to new value {}.".format(col_name, index, new_col_val[index], col_avg))
+            logger.info(
+                f"Replace column {col_name} index {index}'s origin value {new_col_val[index]} to new value {col_avg}."
+            )
             new_col_val[index] = col_avg
 
     return new_col_val

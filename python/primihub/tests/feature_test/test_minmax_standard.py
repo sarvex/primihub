@@ -39,8 +39,7 @@ def test_hor_minmax_df():
     """Test horizontal data z-score standard."""
     zs1 = HorMinMaxStandard()
     zs2 = HorMinMaxStandard()
-    other_stat = []
-    other_stat.append((zs1.fit(data_p1, idxs_nd)))
+    other_stat = [zs1.fit(data_p1, idxs_nd)]
     other_stat.append((zs2.fit(data_p2, idxs_nd)))
 
     # Server do category set union operation
@@ -83,8 +82,7 @@ def server():
     proxy_server.StartRecvLoop()
     """Test horizontal data z-score standard."""
     zs1 = HorMinMaxStandard()
-    other_stat = []
-    other_stat.append((zs1.fit(data_p1, idxs_nd)))
+    other_stat = [zs1.fit(data_p1, idxs_nd)]
     client_min_max = proxy_server.Get("client_min_max")
     other_stat.append(client_min_max)
 

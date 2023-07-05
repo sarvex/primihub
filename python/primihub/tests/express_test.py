@@ -30,10 +30,10 @@ def mpc_run_without_grpc():
     # col_dtype = {"A": 0, "B": 0, "C": 0, "D": 0}
     col_dtype = {"A": 1, "B": 1, "C": 1, "D": 1}
 
-    col_A = [random.uniform(1, 10000) for i in range(10000)]
-    col_B = [random.uniform(1, 10000) for i in range(10000)]
-    col_C = [random.uniform(1, 10000) for i in range(10000)]
-    col_D = [random.uniform(1, 10000) for i in range(10000)]
+    col_A = [random.uniform(1, 10000) for _ in range(10000)]
+    col_B = [random.uniform(1, 10000) for _ in range(10000)]
+    col_C = [random.uniform(1, 10000) for _ in range(10000)]
+    col_D = [random.uniform(1, 10000) for _ in range(10000)]
 
     # col_A = [random.randint(1, 10000) for i in range(1000)]
     # col_B = [random.randint(1, 10000) for i in range(1000)]
@@ -122,11 +122,7 @@ def mpc_run_without_grpc():
     local_exec.finish_import()
     local_result = local_exec.evaluate()
 
-    # compute the D-Value between mpc and plain-text
-    dvalue = []
-    for i in range(len(mpc_result)):
-        dvalue.append(mpc_result[i] - local_result[i])
-
+    dvalue = [mpc_result[i] - local_result[i] for i in range(len(mpc_result))]
     # write csv file
     headers = ['A', 'B', 'C', 'local_result', 'mpc_result', 'dvalue']
     with open('result.csv', 'w') as f:

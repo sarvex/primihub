@@ -50,7 +50,7 @@ class IVBase(BaseModel):
         pass
 
     def get_outputs(self):
-        return dict()
+        return {}
 
     def get_status(self):
         return {}
@@ -69,54 +69,49 @@ class IVBase(BaseModel):
 
         # set category columns
         all_columns = self.data.columns
-        self.category_feature = []
-        for tmp_col in all_columns:
-            if tmp_col in self.continuous_variables + ["label_0", "label_1"]:
-                continue
-            else:
-                self.category_feature.append(tmp_col)
+        self.category_feature = [
+            tmp_col
+            for tmp_col in all_columns
+            if tmp_col not in self.continuous_variables + ["label_0", "label_1"]
+        ]
 
     def binning(self):
         self.bucket_col = []
 
         for cur_feature in self.continuous_variables:
-            if cur_feature in self.data.columns:
-                cur_feature_bins = self.bin_dict.get(cur_feature, None)
-                if cur_feature_bins is not None:
+            if cur_feature not in self.data.columns:
+                continue
+            cur_feature_bins = self.bin_dict.get(cur_feature, None)
+            if cur_feature_bins is not None:
 
                     # bucket-binning according to pre-set bins
 
-                    if self.bin_type == "equal_size":
-                        bin_bucket = pd.qcut(self.data[cur_feature],
-                                             cur_feature_bins,
-                                             labels=False,
-                                             duplicates='drop')
-
-                    else:
-                        bin_bucket = pd.cut(self.data[cur_feature],
-                                            bins=cur_feature_bins,
-                                            labels=np.arange(
-                                                len(cur_feature_bins)))
-
-                    self.data[cur_feature + "_cate"] = bin_bucket
-
-                else:
-                    # bucket-binning according to cutting numbers
-
-                    if self.bin_type == "equal_size":
-                        bin_bucket = pd.qcut(self.data[cur_feature],
-                                             self.bin_num,
-                                             labels=False,
-                                             duplicates='drop')
-                    else:
-                        bin_bucket = pd.cut(self.data[cur_feature],
-                                            bins=self.bin_num,
-                                            labels=np.arange(self.bin_num))
-                    self.data[cur_feature + "_cate"] = bin_bucket
-
-                self.bucket_col.append(cur_feature + "_cate")
+                bin_bucket = (
+                    pd.qcut(
+                        self.data[cur_feature],
+                        cur_feature_bins,
+                        labels=False,
+                        duplicates='drop',
+                    )
+                    if self.bin_type == "equal_size"
+                    else pd.cut(
+                        self.data[cur_feature],
+                        bins=cur_feature_bins,
+                        labels=np.arange(len(cur_feature_bins)),
+                    )
+                )
+            elif self.bin_type == "equal_size":
+                bin_bucket = pd.qcut(self.data[cur_feature],
+                                     self.bin_num,
+                                     labels=False,
+                                     duplicates='drop')
             else:
-                continue
+                bin_bucket = pd.cut(self.data[cur_feature],
+                                    bins=self.bin_num,
+                                    labels=np.arange(self.bin_num))
+            self.data[cur_feature + "_cate"] = bin_bucket
+
+            self.bucket_col.append(cur_feature + "_cate")
 
     def filter_features(self, iv_dict=None):
         filtered_features = []
@@ -125,9 +120,8 @@ class IVBase(BaseModel):
             for key, val in iv_dict.items():
                 if val < self.threshold:
                     continue
-                else:
-                    key = key.replace("_cate", "")
-                    filtered_features.append(key)
+                key = key.replace("_cate", "")
+                filtered_features.append(key)
         return filtered_features
 
 
@@ -147,7 +141,7 @@ class IVHost(IVBase):
     def cal_iv(self):
         all_cates = self.category_feature + self.bucket_col
 
-        iv_dict = dict()
+        iv_dict = {}
 
         for dim in all_cates:
             woe_iv_df_0 = self.data.groupby(dim).agg({
@@ -256,30 +250,28 @@ class IVGuest(IVBase):
 
     def cal_iv(self):
         all_cates = self.category_feature + self.bucket_col
-        iv_dict_counter = dict()
+        iv_dict_counter = {}
         encrypted_label = self.channel.recv("enc_label")
 
         if encrypted_label is None:
             raise ValueError(f"The {encrypted_label} should not be None!")
-        else:
-            for dim in all_cates:
-                cur_col = self.data[dim]
-                items = np.unique(cur_col)
-                tmp_item_counter = {}
+        for dim in all_cates:
+            cur_col = self.data[dim]
+            items = np.unique(cur_col)
+            tmp_item_counter = {}
 
-                for tmp_item in items:
-                    tmp_label = encrypted_label[cur_col == tmp_item]
-                    tmp_total_count = len(tmp_label)
-                    tmp_positive_count = functools.reduce(
-                        lambda x, y: opt_paillier_add(self.pub_key, x, y),
-                        tmp_label)
-                    tmp_item_counter[tmp_item] = {}
-                    tmp_item_counter[tmp_item]["total_count"] = tmp_total_count
-                    tmp_item_counter[tmp_item][
-                        "positive_count"] = tmp_positive_count  # encrypted number
-
-                iv_dict_counter[dim] = tmp_item_counter
-                print("guest tmp_item_counter", tmp_item_counter)
+            for tmp_item in items:
+                tmp_label = encrypted_label[cur_col == tmp_item]
+                tmp_total_count = len(tmp_label)
+                tmp_positive_count = functools.reduce(
+                    lambda x, y: opt_paillier_add(self.pub_key, x, y),
+                    tmp_label)
+                tmp_item_counter[tmp_item] = {
+                    "total_count": tmp_total_count,
+                    "positive_count": tmp_positive_count,
+                }
+            iv_dict_counter[dim] = tmp_item_counter
+            print("guest tmp_item_counter", tmp_item_counter)
 
         return iv_dict_counter
 

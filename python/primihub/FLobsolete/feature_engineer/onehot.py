@@ -25,8 +25,7 @@ class OneHotEncoder():
         if isinstance(idxs, int):
             return [idxs, ]
         elif isinstance(idxs, (tuple, list)):
-            idxs = list(idxs)
-            idxs.sort()
+            idxs = sorted(idxs)
             return idxs
         else:
             raise ValueError("idxs may be int | list | tuple")
@@ -46,15 +45,11 @@ class OneHotEncoder():
             if idx == 0:
                 tmp_data = np.hstack(
                     [ohed_data[:, list(range(last_idx, cats_len[i]))].tolist(), tmp_data[:, :]])
-            # stack onehot_encoded data at the tail position
             elif idx == (tmp_len + len(idxs_nd) - 1):
                 tmp_data = np.hstack([tmp_data[:, :], ohed_data[:, list(
                     range(last_idx, last_idx + cats_len[i]))].tolist()])
             else:
-                if i == 0:
-                    tmp_idx = idx
-                else:
-                    tmp_idx = idx + sum(cats_len[:i]) - i - 1
+                tmp_idx = idx if i == 0 else idx + sum(cats_len[:i]) - i - 1
                 tmp_data = np.hstack([tmp_data[:, :tmp_idx], ohed_data[:, list(
                     range(last_idx, cats_len[i]))].tolist(), tmp_data[:, tmp_idx:]])
             last_idx += cats_len[i]
@@ -83,11 +78,7 @@ class HorOneHotEncoder(OneHotEncoder):
         # Server index the cats in each column
         for i, j in zip(self_cats, other_cats):
             tmp_union = np.union1d(i, j)
-            idxs_dict = {}
-            i = 0
-            for k in tmp_union:
-                idxs_dict[k] = i
-                i += 1
+            idxs_dict = {k: i for i, k in enumerate(tmp_union)}
             inner_max_cats.append(len(tmp_union))
             # inner_idxs = np.arange(len(tmp_union))
             # all_cats_idxs.append(np.stack((tmp_union, inner_idxs), axis = 1))
@@ -99,13 +90,8 @@ class HorOneHotEncoder(OneHotEncoder):
         oh_data = []
         for i, idx in enumerate(idxs2):
             tmp_eye = np.eye(self.max_cats[i])
-            oh_array = []
-            for cat in trans_data[:, idx]:
-                oh_array.append(tmp_eye[self.cats_idxs[i][cat]])
-            if i == 0:
-                oh_data = np.array(oh_array)
-            else:
-                oh_data = np.hstack([oh_data, oh_array])
+            oh_array = [tmp_eye[self.cats_idxs[i][cat]] for cat in trans_data[:, idx]]
+            oh_data = np.array(oh_array) if i == 0 else np.hstack([oh_data, oh_array])
         return oh_data.astype(int)
 
     def trans(self, trans_data, idxs2):
@@ -122,15 +108,11 @@ class HorOneHotEncoder(OneHotEncoder):
             if idx == 0:
                 tmp_data = np.hstack(
                     [ohed_data[:, list(range(last_idx, cats_len[i]))].tolist(), tmp_data[:, :]])
-            # stack onehot_encoded data at the tail position
             elif idx == (tmp_len + len(idxs_nd) - 1):
                 tmp_data = np.hstack([tmp_data[:, :], ohed_data[:, list(
                     range(last_idx, last_idx + cats_len[i]))].tolist()])
             else:
-                if i == 0:
-                    tmp_idx = idx
-                else:
-                    tmp_idx = idx + sum(cats_len[:i]) - i - 1
+                tmp_idx = idx if i == 0 else idx + sum(cats_len[:i]) - i - 1
                 tmp_data = np.hstack([tmp_data[:, :tmp_idx], ohed_data[:, list(
                     range(last_idx, cats_len[i]))].tolist(), tmp_data[:, tmp_idx:]])
             last_idx += cats_len[i]

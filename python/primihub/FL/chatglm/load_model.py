@@ -23,11 +23,11 @@ model = AutoModel.from_pretrained(model_name_or_path,
 #Load the model 1
 prefix_state_dict = torch.load(
     os.path.join(CHECKPOINT_PATH, "pytorch_model.bin"))
-new_prefix_state_dict = {}
-for k, v in prefix_state_dict.items():
-    if k.startswith("transformer.prefix_encoder."):
-        new_prefix_state_dict[k[len("transformer.prefix_encoder."):]] = v
-
+new_prefix_state_dict = {
+    k[len("transformer.prefix_encoder.") :]: v
+    for k, v in prefix_state_dict.items()
+    if k.startswith("transformer.prefix_encoder.")
+}
 model.transformer.prefix_encoder.load_state_dict(new_prefix_state_dict)
 
 model = model.quantize(4)

@@ -20,5 +20,4 @@ class NeuralNetwork(nn.Module):
         )
 
     def forward(self, x):
-        logits = self.layers(x)
-        return logits
+        return self.layers(x)

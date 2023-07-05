@@ -7,7 +7,7 @@ import pytest
 
 def random_plaintext(length):
     res = 0
-    for i in range(length - 1):
+    for _ in range(length - 1):
         res = res << 1
         res = res | random.randint(0, 1)
     if random.randint(0, 1) == 0:
@@ -22,7 +22,7 @@ def test_opt_paillier_pack_c2py():
     keygen_cost += keygen_ed - keygen_st
 
     print("==================KeyGen is finished==================")
-    print("KeyGen costs: " + str(keygen_cost * 1000.0) + " ms.")
+    print(f"KeyGen costs: {str(keygen_cost * 1000.0)} ms.")
 
     _round = 10
     pack_size = 1000
@@ -30,11 +30,10 @@ def test_opt_paillier_pack_c2py():
     decrypt_cost = 0
     add_cost = 0
     plain_text_bit_length = 70 - 1
-    for i in range(_round):
-        plain_text_list = []
-        for j in range(pack_size):
-            plain_text_list.append(random_plaintext(plain_text_bit_length))
-
+    for _ in range(_round):
+        plain_text_list = [
+            random_plaintext(plain_text_bit_length) for _ in range(pack_size)
+        ]
         e_st = time.time()
         pack_cipher_text = opt_paillier_pack_encrypt_crt(pub, prv, plain_text_list)
         e_ed = time.time()
@@ -48,9 +47,9 @@ def test_opt_paillier_pack_c2py():
         for j in range(pack_size):
             assert pack_decrypt_text[j] == plain_text_list[j]
 
-        plain_text_list2 = []
-        for j in range(pack_size):
-            plain_text_list2.append(random_plaintext(plain_text_bit_length))
+        plain_text_list2 = [
+            random_plaintext(plain_text_bit_length) for _ in range(pack_size)
+        ]
         pack_cipher_text2 = opt_paillier_pack_encrypt(pub, plain_text_list2, pack_cipher_text.crtMod)
 
         a_st = time.time()
@@ -59,7 +58,7 @@ def test_opt_paillier_pack_c2py():
         add_cost += a_ed - a_st
 
         pack_add_decrypt_text = opt_paillier_pack_decrypt_crt(pub, prv, pack_add_cipher_text)
-        
+
         for j in range(pack_size):
             assert pack_add_decrypt_text[j] == plain_text_list2[j] + plain_text_list[j]
 
@@ -68,9 +67,9 @@ def test_opt_paillier_pack_c2py():
     decrypt_cost = 1.0 / _round * decrypt_cost;
     add_cost     = 1.0 / _round * add_cost;
 
-    print("The avg encryption cost is " + str(encrypt_cost * 1000.0 ) + " ms.")
-    print("The avg decryption cost is " + str(decrypt_cost * 1000.0 ) + " ms.")
-    print("The avg addition   cost is " + str(add_cost     * 1000.0 ) + " ms.")
+    print(f"The avg encryption cost is {str(encrypt_cost * 1000.0)} ms.")
+    print(f"The avg decryption cost is {str(decrypt_cost * 1000.0)} ms.")
+    print(f"The avg addition   cost is {str(add_cost * 1000.0)} ms.")
 
     print("========================================================")
 

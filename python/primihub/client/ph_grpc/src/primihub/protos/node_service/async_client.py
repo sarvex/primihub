@@ -65,7 +65,9 @@ async def _run() -> None:
                 )):
             print("NodeService client received from async generator: " +
                   str(response.event_type))
-            print("NodeService client received from async generator: " + response.event_type)
+            print(
+                f"NodeService client received from async generator: {response.event_type}"
+            )
         print("# Direct read from the stub")
         # Direct read from the stub
         node_event_reply_stream = stub.SubscribeNodeEvent(
@@ -80,7 +82,9 @@ async def _run() -> None:
                 break
             print("NodeService client received from direct read: " +
                   str(response.event_type))
-            print("NodeService client received from async generator: " + response.event_type)
+            print(
+                f"NodeService client received from async generator: {response.event_type}"
+            )
 
 
 def callback():
@@ -101,7 +105,9 @@ async def run_async() -> None:
                     # client_ip="127.0.0.1",
                     # client_port=50051
                 )):
-            print("NodeService client received from async generator: " +str(response.event_type))
+            print(
+                f"NodeService client received from async generator: {str(response.event_type)}"
+            )
             # listener.fire(str(response.event_type))
             # listener.fire(str(response))
             print(">>>>>>>>><<<<<<<<<<<<<<<<")

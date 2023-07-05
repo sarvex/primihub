@@ -17,12 +17,12 @@ def evaluate_ks_and_roc_auc(y_real, y_proba):
     # Unite both visions to be able to filter
     df = pd.DataFrame()
 
-    if isinstance(y_real, np.ndarray) or isinstance(y_real, list):
+    if isinstance(y_real, (np.ndarray, list)):
         df['real'] = y_real
     else:
         df['real'] = y_real.values
 
-    if isinstance(y_proba, np.ndarray) or isinstance(y_proba, list):
+    if isinstance(y_proba, (np.ndarray, list)):
         df['proba'] = y_proba
     else:
         df['proba'] = y_proba.values
@@ -42,12 +42,12 @@ def evaluate_ks_and_roc_auc(y_real, y_proba):
 def plot_lift_and_gain(y_real, y_proba):
     merge_df = pd.DataFrame()
 
-    if isinstance(y_real, np.ndarray) or isinstance(y_real, list):
+    if isinstance(y_real, (np.ndarray, list)):
         merge_df['y_real'] = y_real
     else:
         merge_df['y_real'] = y_real.values
 
-    if isinstance(y_proba, np.ndarray) or isinstance(y_proba, list):
+    if isinstance(y_proba, (np.ndarray, list)):
         merge_df['y_proba'] = y_proba
     else:
         merge_df['y_proba'] = y_proba.values

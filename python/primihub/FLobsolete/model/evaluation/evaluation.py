@@ -76,12 +76,8 @@ class Evaluator:
 
     @staticmethod
     def get_roc(y_test,y_pred_prob):
-        roc = {}
         fpr, tpr, thresholds = metrics.roc_curve(y_test, y_pred_prob)
-        roc["fpr"] = fpr
-        roc["tpr"] = tpr
-        roc["thresholds"] = thresholds
-        return roc
+        return {"fpr": fpr, "tpr": tpr, "thresholds": thresholds}
 
 
     @staticmethod
@@ -96,8 +92,7 @@ class Evaluator:
         ks curve：abscissa：thresholds ordinate：fpr and tpr two curves
         '''
         fpr, tpr, thresholds = metrics.roc_curve(y_test, y_pred_prob)
-        ks = max(tpr - fpr)
-        return ks
+        return max(tpr - fpr)
 
 
     """
@@ -228,8 +223,7 @@ class Classification_eva:
                 :return:classification metricss all supported.
                 """
         lable = [0,1]
-        lable_true = list(set(y_true["train"]))
-        lable_true.sort()
+        lable_true = sorted(set(y_true["train"]))
         y = {"train":[],"test":[]}
         if lable_true != lable:
             for i in y_true["train"]:
@@ -277,10 +271,7 @@ class Classification_eva:
                 method = Evaluator.classification_method[i]
                 try:
                     f = getattr(Evaluator, method)
-                    if (metrics in Evaluator.need_prob):
-                        mere = f(y_t, y_p)
-                    else:
-                        mere = f(y_t, y_hat)
+                    mere = f(y_t, y_p) if (metrics in Evaluator.need_prob) else f(y_t, y_hat)
                     res[k][metrics] = mere
                 except:
                     res[k][metrics] = f"{metrics} is not support"

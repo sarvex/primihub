@@ -64,8 +64,7 @@ class FlightClient(DatasetClient):
     def do_get(self, ticket: str) -> pd.DataFrame:
         reader = self.client.do_get(pyarrow.flight.Ticket(ticket))
         data = reader.read_all()
-        df_data = data.to_pandas()
-        return df_data
+        return data.to_pandas()
 
 
 class DatasetClientFactory:

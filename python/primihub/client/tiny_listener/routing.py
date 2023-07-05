@@ -71,7 +71,7 @@ class Route:
         return params
 
     def __repr__(self) -> str:
-        return "{}(path={}, opts={})".format(self.__class__.__name__, self.path, self.opts)
+        return f"{self.__class__.__name__}(path={self.path}, opts={self.opts})"
 
 
 def compile_path(path: str) -> Tuple[Pattern[str], Dict[str, Convertor]]:
@@ -100,5 +100,5 @@ def compile_path(path: str) -> Tuple[Pattern[str], Dict[str, Convertor]]:
         convertors[param_name] = convertor
         idx = match.end()
 
-    path_regex += re.escape(path[idx:]) + "$"
+    path_regex += f"{re.escape(path[idx:])}$"
     return re.compile(path_regex), convertors

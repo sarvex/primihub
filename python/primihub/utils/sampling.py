@@ -12,9 +12,7 @@ def random_sample(data, rate: float):
     assert rate > 0 and rate <= 1.0
 
     sample_num = int(len(all_ids) * rate)
-    sample_ids = random.sample(all_ids, sample_num)
-
-    return sample_ids
+    return random.sample(all_ids, sample_num)
 
 
 def goss_sample(df_g, top_rate=0.2, other_rate=0.2):
@@ -44,6 +42,4 @@ def col_sample(feature_list, sample_ratio=0.3, threshold=30):
 
     sample_num = int(len(feature_list) * sample_ratio)
 
-    sample_features = random.sample(feature_list, sample_num)
-
-    return sample_features
+    return random.sample(feature_list, sample_num)
