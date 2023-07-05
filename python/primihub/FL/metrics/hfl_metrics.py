@@ -61,11 +61,11 @@ def trapezoid_area(x1, x2, y1, y2):
 
 
 def auc_from_fpr_tpr(fpr, tpr):
-    area = 0
-    for i in range(len(fpr) - 1):
-        if fpr[i] != fpr[i + 1]:
-            area += trapezoid_area(fpr[i], fpr[i + 1], tpr[i], tpr[i + 1])
-    return area
+    return sum(
+        trapezoid_area(fpr[i], fpr[i + 1], tpr[i], tpr[i + 1])
+        for i in range(len(fpr) - 1)
+        if fpr[i] != fpr[i + 1]
+    )
 
 
 # Tom Fawcett. An introduction to ROC analysis.
@@ -79,11 +79,7 @@ def roc_vertical_avg(samples, FPR, TPR):
     fpr = [i / samples for i in range(samples + 1)]
 
     for fpr_sample in fpr:
-        tprsum = 0
-
-        for i in range(nrocs):
-            tprsum += tpr_for_fpr(fpr_sample, FPR[i], TPR[i])
-
+        tprsum = sum(tpr_for_fpr(fpr_sample, FPR[i], TPR[i]) for i in range(nrocs))
         tpravg.append(tprsum / nrocs)
 
     return fpr, tpravg
@@ -112,8 +108,7 @@ def roc_threshold_avg(samples, FPR, TPR, THRESHOLDS):
     tpravg = []
 
     for thresholds in THRESHOLDS:
-        for t in thresholds:
-            T.append(t)
+        T.extend(iter(thresholds))
     T.sort(reverse=True)
 
     for tidx in range(0, len(T), int(len(T) / samples)):

@@ -67,18 +67,20 @@ def iv_filter_host():
                               local_port=host_port,
                               context=ph.context.Context)
 
-    iv_host = Iv_with_label(df=data,
-                            category_feature=all_columns,
-                            continuous_feature=config['continuous_variables'],
-                            threshold=config['thres'],
-                            bin_num=config['bin_num'],
-                            channel=host_channel,
-                            target_name=config['label'],
-                            bin_dict=dict(),
-                            continuous_feature_max=dict(),
-                            continuous_feature_min=dict(),
-                            output_file=output_file,
-                            bin_type=config['bin_type'])
+    iv_host = Iv_with_label(
+        df=data,
+        category_feature=all_columns,
+        continuous_feature=config['continuous_variables'],
+        threshold=config['thres'],
+        bin_num=config['bin_num'],
+        channel=host_channel,
+        target_name=config['label'],
+        bin_dict={},
+        continuous_feature_max={},
+        continuous_feature_min={},
+        output_file=output_file,
+        bin_type=config['bin_type'],
+    )
     iv_host.run()
 
 
@@ -126,17 +128,19 @@ def iv_filter_guest():
                                local_port=guest_port,
                                context=ph.context.Context)
 
-    iv_guest = Iv_no_label(df=data,
-                           category_feature=all_columns,
-                           threshold=config['thres'],
-                           bin_num=config['bin_num'],
-                           channel=guest_channel,
-                           continuous_feature=config['continuous_variables'],
-                           target_name=None,
-                           continuous_feature_max=dict(),
-                           continuous_feature_min=dict(),
-                           bin_dict=dict(),
-                           output_file=output_file,
-                           bin_type=config['bin_type'])
+    iv_guest = Iv_no_label(
+        df=data,
+        category_feature=all_columns,
+        threshold=config['thres'],
+        bin_num=config['bin_num'],
+        channel=guest_channel,
+        continuous_feature=config['continuous_variables'],
+        target_name=None,
+        continuous_feature_max={},
+        continuous_feature_min={},
+        bin_dict={},
+        output_file=output_file,
+        bin_type=config['bin_type'],
+    )
 
     iv_guest.run()

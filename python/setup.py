@@ -49,28 +49,28 @@ def solib2sitepackage(solib_path=None):
     module_list = ["opt_paillier_c2py.so", "linkcontext.so"]
     for module_name in module_list:
         module_installed = False
-        if os.path.isfile("{}/{}".format(py_so_root_path, module_name)):
-            shutil.copyfile("{}/{}".format(py_so_root_path, module_name),
-                    paths + "/{}".format(module_name))
-            print("Install {} finish, file found in {}.".format(module_name, py_so_root_path))
+        if os.path.isfile(f"{py_so_root_path}/{module_name}"):
+            shutil.copyfile(f"{py_so_root_path}/{module_name}", f"{paths}/{module_name}")
+            print(f"Install {module_name} finish, file found in {py_so_root_path}.")
             module_installed = True
         else:
-            print("Can't not find file {}/{}, try to find ./{}.".format(py_so_root_path, module_name, module_name))
+            print(
+                f"Can't not find file {py_so_root_path}/{module_name}, try to find ./{module_name}."
+            )
         if module_installed:
             continue
-        if os.path.isfile("./{}".format(module_name)):
-            shutil.copyfile("./{}".format(module_name),
-                    paths + "/{}".format(module_name))
-            print("Install {} finish, file found in './'.".format(module_name))
+        if os.path.isfile(f"./{module_name}"):
+            shutil.copyfile(f"./{module_name}", f"{paths}/{module_name}")
+            print(f"Install {module_name} finish, file found in './'.")
         else:
-            print("Can't not find file ./{}.".format(module_name))
-            print("Ignore {} due to file not found.".format(module_name))
+            print(f"Can't not find file ./{module_name}.")
+            print(f"Ignore {module_name} due to file not found.")
 
 
 def clean_proto():
     os.chdir("../")
     python_out_dir = "python/primihub/client/ph_grpc"
-    proto_dir = python_out_dir + "/src/primihub/protos/"
+    proto_dir = f"{python_out_dir}/src/primihub/protos/"
 
     dir_files = os.listdir(proto_dir)
     file_to_remove = []
@@ -82,7 +82,7 @@ def clean_proto():
 
     for fname in file_to_remove:
         os.remove(proto_dir + fname)
-        print("Remove {}.".format(fname))
+        print(f"Remove {fname}.")
 
     os.chdir("python")
     print(os.getcwd())
@@ -107,7 +107,7 @@ def compile_proto():
                                                                 grpc_python_out=grpc_python_out,
                                                                 pyexe=sys.executable)
 
-    print("cmd: %s" % cmd_str)
+    print(f"cmd: {cmd_str}")
     cmd = shlex.split(cmd_str)
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = p.communicate()

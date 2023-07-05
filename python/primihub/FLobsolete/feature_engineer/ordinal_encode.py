@@ -31,8 +31,7 @@ class OrdinalEncoder():
         if isinstance(idxs, int):
             return [idxs, ]
         elif isinstance(idxs, (tuple, list)):
-            idxs = list(idxs)
-            idxs.sort()
+            idxs = sorted(idxs)
             return idxs
         else:
             raise ValueError("idxs may be int | list | tuple")
@@ -46,9 +45,7 @@ class OrdinalEncoder():
         for idx in idxs_nd:
             tmp_cats = np.unique(fit_data[:, [idx]])
             self.categories_.append(tmp_cats)
-            idxs_dict = {}
-            for idx, k in enumerate(tmp_cats):
-                idxs_dict[k] = idx
+            idxs_dict = {k: idx for idx, k in enumerate(tmp_cats)}
             cats_len.append(len(tmp_cats))
             cats_idxs.append(idxs_dict)
         self.cats_len, self.cats_idxs = cats_len, cats_idxs
@@ -58,9 +55,7 @@ class OrdinalEncoder():
         trans_data = self._check_data(trans_data)
         idxs2 = self._check_idxs(idxs2)
         for i, idx in enumerate(idxs2):
-            od_array = []
-            for cat in trans_data[:, idx]:
-                od_array.append(self.cats_idxs[i][cat])
+            od_array = [self.cats_idxs[i][cat] for cat in trans_data[:, idx]]
             trans_data[:, idx] = np.asarray(od_array)
         if self.columns.any():
             return pd.DataFrame(trans_data, columns=self.columns)
@@ -95,9 +90,7 @@ class HorOrdinalEncoder(OrdinalEncoder):
             tmp_union = np.array([])
             for cat in cats:
                 tmp_union = np.union1d(tmp_union, cat)
-            idxs_dict = {}
-            for idx, k in enumerate(tmp_union):
-                idxs_dict[k] = idx
+            idxs_dict = {k: idx for idx, k in enumerate(tmp_union)}
             union_cats_len.append(len(tmp_union))
             union_cats_idxs.append(idxs_dict)
         return union_cats_len, union_cats_idxs

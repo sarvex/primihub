@@ -26,18 +26,17 @@ listener = Listener()
 listener.run()
 
 
-@listener.on_event("/%s/" % NODE_EVENT_TYPE[NODE_EVENT_TYPE_NODE_CONTEXT])
+@listener.on_event(f"/{NODE_EVENT_TYPE[NODE_EVENT_TYPE_NODE_CONTEXT]}/")
 def node_event_handler(event: Event):
     from primihub.client import primihub_cli as cli
     cli.notify_channel_connected = True
-    logger.debug("node_event_handler: %s" % event)
+    logger.debug(f"node_event_handler: {event}")
 
 
 @listener.on_event("/%s/{task_id}" % NODE_EVENT_TYPE[NODE_EVENT_TYPE_TASK_STATUS])
 async def handler_task_status(event: Event):
     task_id = event.params["task_id"]
-    logger.debug("handler_task_status params: {}, data: {}".format(
-        event.params, event.data))
+    logger.debug(f"handler_task_status params: {event.params}, data: {event.data}")
     # TODO
     # event data
     # {'event_type': 1,
@@ -66,17 +65,17 @@ async def handler_task_status(event: Event):
     client_id = cli.client_id
     # client_ip = cli.client_ip
     node_ip = cli.node.split(":")[0]
-    logger.debug("Total number of node is : {}".format(len(nodes)))
+    logger.debug(f"Total number of node is : {len(nodes)}")
     task = Task(task_id=task_id, primihub_client=cli)
     for node in nodes:
         if node not in task.nodes:
             task.nodes.append(node)
 
+    cert = ""  # TODO
     for node in nodes:
-        connect_str = node_ip + ":" + str(node["client_port"])
-        cert = ""  # TODO
-        logger.debug("node connect str: {}".format(connect_str))
-        logger.debug("task id: {}".format(task_id))
+        connect_str = f"{node_ip}:" + str(node["client_port"])
+        logger.debug(f"node connect str: {connect_str}")
+        logger.debug(f"task id: {task_id}")
         task.get_node_event(node=connect_str, cert=cert)
         task_status = event.data.task_status.status
         await task.set_task_status(task_status)

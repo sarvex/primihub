@@ -168,8 +168,7 @@ class NeuralNetworkClient(BaseModel):
         # load dataset
         origin_data = read_data(data_info=self.role_params['data'])
         x = origin_data.copy()
-        selected_column = modelFile['selected_column']
-        if selected_column:
+        if selected_column := modelFile['selected_column']:
             x = x[selected_column]
         id = modelFile['id']
         if id in x.columns:
@@ -192,7 +191,7 @@ class NeuralNetworkClient(BaseModel):
         model.eval()
         with torch.no_grad():
             pred = model(x)
-            
+
             if task == 'classification':
                 if modelFile['output_dim'] == 1:
                     pred_prob = torch.sigmoid(pred)
@@ -200,7 +199,7 @@ class NeuralNetworkClient(BaseModel):
                 else:
                     pred_prob = torch.softmax(pred, dim=1)
                     pred_y = pred_prob.argmax(1)
-        
+
         if task == 'classification':
             if modelFile['output_dim'] == 1:
                 pred_prob = pred_prob.reshape(-1)
@@ -212,7 +211,7 @@ class NeuralNetworkClient(BaseModel):
             result = pd.DataFrame({
                 'pred_y': pred.reshape(-1).tolist()
             })
-        
+
         data_result = pd.concat([origin_data, result], axis=1)
         predict_path = self.role_params['predict_path']
         check_directory_exist(predict_path)

@@ -36,10 +36,10 @@ class Task(object):
     async def set_task_status(self, status):
         async with lock:
             self.task_status = status
-            if self.task_status == "SUCCESS" or self.task_status == "FAILED":
+            if self.task_status in ["SUCCESS", "FAILED"]:
                 logger.debug("The task is over and the node exits.")
                 self.nodes.pop()
-                logger.debug("Number of current survival nodes: {}".format(len(self.nodes)))
+                logger.debug(f"Number of current survival nodes: {len(self.nodes)}")
                 if len(self.nodes) == 0:
                     self.exit()
 
@@ -61,11 +61,12 @@ class Task(object):
 
     def get_node_event(self, node, cert):
         # # get node event from other nodes
-        logger.debug("get node event from: {}".format(node))
+        logger.debug(f"get node event from: {node}")
         worker_node_grpc_client = None # NodeServiceClient(node, cert)
         self.node_grpc_connections.append(worker_node_grpc_client)
         logger.debug(
-            "!!!!!!! ------ node_grpc_connections ------node: {}".format(worker_node_grpc_client.node))
+            f"!!!!!!! ------ node_grpc_connections ------node: {worker_node_grpc_client.node}"
+        )
         logger.debug(self.node_grpc_connections)
         notify_request = worker_node_grpc_client.client_context(
             self.cli.client_id, self.cli.client_ip, random.randint(10000, 10050))

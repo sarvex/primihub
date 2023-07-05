@@ -15,10 +15,7 @@ class LogisticRegression_Host_Plaintext(LogisticRegression):
         return z
     
     def predict_prob(self, z):
-        if self.multiclass:
-            return self.softmax(z)
-        else:
-            return self.sigmoid(z)
+        return self.softmax(z) if self.multiclass else self.sigmoid(z)
     
     def compute_error(self, y, z):
         if self.multiclass:

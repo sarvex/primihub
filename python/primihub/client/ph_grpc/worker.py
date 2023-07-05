@@ -72,8 +72,7 @@ class WorkerClient:
             "client_processed_up_to": client_processed_up_to,
             "submit_client_id": submit_client_id
         }
-        request = worker_pb2.PushTaskRequest(**request_data)
-        return request
+        return worker_pb2.PushTaskRequest(**request_data)
 
     def submit_task(self):
         """gRPC submit task
@@ -112,24 +111,25 @@ class WorkerClient:
 
                 TaskStatusReply = self.stub.FetchTaskStatus(task_info)
                 for task_status in TaskStatusReply.task_status:
-                    party = task_status.party
                     status = task_status.status
 
-                    if status == worker_pb2.TaskStatus.StatusCode.FAIL or \
-                       status == worker_pb2.TaskStatus.StatusCode.NONEXIST:
+                    if status in [
+                        worker_pb2.TaskStatus.StatusCode.FAIL,
+                        worker_pb2.TaskStatus.StatusCode.NONEXIST,
+                    ]:
                         is_fail = True
 
                     if is_fail:
                         break
 
-                    if party:
+                    if party := task_status.party:
                         print('party:', party)
                         print('status:', status_map[status])
                         print(20*'-')
 
                         if status != worker_pb2.TaskStatus.StatusCode.RUNNING:
                             party_status[party] = status_map[status]
-                
+
                 if is_fail or len(party_status) == PushTaskReply.party_count:
                     break
 

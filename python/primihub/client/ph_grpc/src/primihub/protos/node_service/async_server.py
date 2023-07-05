@@ -31,17 +31,17 @@ class NodeService(NodeServiceServicer):
             import time
             time.sleep(i)
             event_type = random.randint(0, 2)
-            print("event_type: %s" % event_type)
+            print(f"event_type: {event_type}")
             yield NodeEventReply(
                 event_type=event_type,
                 task_status={
                     "task_context": {
-                        "node_id": "node-%s" % i,
-                        "task_id": "task-%s" % i,
-                        "job_id": "job-%s" % i
+                        "node_id": f"node-{i}",
+                        "task_id": f"task-{i}",
+                        "job_id": f"job-{i}",
                     },
-                    "status": "RUNNING"
-                }
+                    "status": "RUNNING",
+                },
             )
 
 

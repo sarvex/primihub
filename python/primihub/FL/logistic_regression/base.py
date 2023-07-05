@@ -45,10 +45,7 @@ class LogisticRegression:
                 / x.shape[0] + 0.5 * self.alpha * (self.theta ** 2).sum()
     
     def loss(self, x, y):
-        if self.multiclass:
-            return self.CELoss(x, y)
-        else:
-            return self.BCELoss(x, y)
+        return self.CELoss(x, y) if self.multiclass else self.BCELoss(x, y)
 
     def compute_grad(self, x, y):
         if self.multiclass:
@@ -71,10 +68,7 @@ class LogisticRegression:
 
     def predict_prob(self, x):
         z = x.dot(self.theta[1:]) + self.theta[0]
-        if self.multiclass:
-            return self.softmax(z)
-        else:
-            return self.sigmoid(z)
+        return self.softmax(z) if self.multiclass else self.sigmoid(z)
 
     def predict(self, x):
         prob = self.predict_prob(x)

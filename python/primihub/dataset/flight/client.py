@@ -77,7 +77,7 @@ class MyFlightClient(object):
     def push_data(self, file):
         print('File Name:', file)
         my_table = csv.read_csv(file)
-        print('Table rows=', str(len(my_table)))
+        print('Table rows=', len(my_table))
         df = my_table.to_pandas()
         print(df.head())
         writer, _ = self.client.do_put(
@@ -93,8 +93,7 @@ class MyFlightClient(object):
             print('Ticket:', endpoint.ticket)
             for location in endpoint.locations:
                 print(location)
-                reader = self.client.do_get(endpoint.ticket)
-                yield reader
+                yield self.client.do_get(endpoint.ticket)
         #         df = reader.read_pandas()
         #         flight.append(df)
         # return flight
@@ -151,10 +150,5 @@ if __name__ == '__main__':
         for ppp in p:
             print(ppp, type(ppp), "---")
 
-    total_rows = 0
-    # read_table = reader.read_all()
-    # print(read_table.to_pandas().head())
-    for chunk in reader:
-        # print(chunk.data)
-        total_rows += chunk.data.num_rows
+    total_rows = sum(chunk.data.num_rows for chunk in reader)
     print("Got", total_rows, "rows total, expected", NUM_BATCHES * ROWS_PER_BATCH)

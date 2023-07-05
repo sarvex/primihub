@@ -49,10 +49,8 @@ class Transformer(BaseModel):
             error_msg = f"Unsupported FL type: {FL_type}"
             logger.error(error_msg)
             raise RuntimeError(error_msg)
-        
-        # select process column
-        selected_column = self.role_params['selected_column']
-        if selected_column:
+
+        if selected_column := self.role_params['selected_column']:
             process_column = selected_column
         else:
             process_column = self.data.columns.tolist()
@@ -62,7 +60,7 @@ class Transformer(BaseModel):
             process_column.remove(id)
             logger.info(f"drop id column: {id}")
         logger.info(f"processed column: {process_column}")
-        
+
         transformer = []
         num_type = ['float', 'int']
 
@@ -71,78 +69,79 @@ class Transformer(BaseModel):
 
         # label encoder
         if role != 'guest':
-            label = self.role_params['label']
-            if label:
+            if label := self.role_params['label']:
                 process_column.remove(label)
                 if self.common_params['task'] == 'classification':
                     logger.info(f"LabelEncoder: {label}")
                     label_encoder = LabelEncoder(FL_type=FL_type,
                                                 role=role)
                     self.data[label] = \
-                        label_encoder.fit_transform(self.data[label])
+                            label_encoder.fit_transform(self.data[label])
                     transformer.append(('LabelEncoder',
                                         label_encoder.module,
                                         label))
-                
+
         process_data = self.data.loc[:, process_column]
 
         # imputer
         nan_column = process_data.columns[process_data.isna().any()].tolist()
 
-        # string imputer
-        str_nan_column = process_data[nan_column].select_dtypes(exclude=num_type).columns.tolist()
-        if str_nan_column:
+        if (
+            str_nan_column := process_data[nan_column]
+            .select_dtypes(exclude=num_type)
+            .columns.tolist()
+        ):
             logger.info(f"String Imputer: {str_nan_column}")
             str_imputer = SimpleImputer(strategy='most_frequent',
                                         FL_type=FL_type,
                                         role=role)
             self.data[str_nan_column] = \
-                str_imputer.fit_transform(
+                    str_imputer.fit_transform(
                     self.data[str_nan_column]
                 )
             transformer.append(('String Imputer',
                                 str_imputer.module,
                                 str_nan_column))
-        
-        # numeric imputer
-        num_nan_column = process_data[nan_column].select_dtypes(include=num_type).columns.tolist()
-        if num_nan_column:
+
+        if (
+            num_nan_column := process_data[nan_column]
+            .select_dtypes(include=num_type)
+            .columns.tolist()
+        ):
             logger.info(f"Numeric Imputer: {num_nan_column}")
             num_imputer = SimpleImputer(strategy='mean',
                                         FL_type=FL_type,
                                         role=role)
             self.data[num_nan_column] = \
-                num_imputer.fit_transform(
+                    num_imputer.fit_transform(
                     self.data[num_nan_column]
                 )
             transformer.append(('Numeric Imputer',
                                 num_imputer.module,
                                 num_nan_column))   
-        
-        # object encoder
-        obj_column = process_data.select_dtypes(exclude=num_type).columns.tolist()
-        if obj_column:
+
+        if obj_column := process_data.select_dtypes(
+            exclude=num_type
+        ).columns.tolist():
             logger.info(f"Encoder: {obj_column}")
             encoder = OrdinalEncoder(handle_unknown='use_encoded_value',
                                      unknown_value=-1,
                                      FL_type=FL_type,
                                      role=role)
             self.data[obj_column] = \
-                encoder.fit_transform(
+                    encoder.fit_transform(
                     self.data[obj_column]
                 )
             transformer.append(('Encoder',
                                 encoder.module,
                                 obj_column))
-        
-        # scaler
-        scale_column = process_column
-        if scale_column:
+
+        if scale_column := process_column:
             logger.info(f"Scaler: {scale_column}")
             scaler = MinMaxScaler(FL_type=FL_type,
                                   role=role)
             self.data[scale_column] = \
-                scaler.fit_transform(
+                    scaler.fit_transform(
                     self.data[scale_column]
                 )
             transformer.append(('Scaler',

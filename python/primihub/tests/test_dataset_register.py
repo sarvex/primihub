@@ -13,7 +13,7 @@ def test_register():
     for char in char_list:
         name = name + char
 
-    path = "/tmp/{}.csv".format(name)
+    path = f"/tmp/{name}.csv"
     np.savetxt(path, array, delimiter=",")
 
     service_addr = ph.context.Context.params_map["DatasetServiceAddr"]

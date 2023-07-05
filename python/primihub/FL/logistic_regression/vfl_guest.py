@@ -96,7 +96,7 @@ class LogisticRegressionGuest(BaseModel):
                                   remote_party=remote_party,
                                   node_info=self.node_info,
                                   task_info=self.task_info)
-        
+
         # load model for prediction
         model_path = self.role_params['model_path']
         logger.info(f"model path: {model_path}")
@@ -106,8 +106,7 @@ class LogisticRegressionGuest(BaseModel):
         # load dataset
         x = read_data(data_info=self.role_params['data'])
 
-        selected_column = modelFile['selected_column']
-        if selected_column:
+        if selected_column := modelFile['selected_column']:
             x = x[selected_column]
         id = modelFile['id']
         if id in x.columns:

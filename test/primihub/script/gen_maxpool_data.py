@@ -7,19 +7,15 @@ def gen_csv(row_num,col_num):
     party_0_file = "/tmp/train_party_0.csv"
     with open(party_0_file, "w") as f:
         writer = csv.writer(f)
-        for i in range(row_num):
-            row = []
-            for j in range(col_num):
-                row.append(random.randrange(0, 255))
+        for _ in range(row_num):
+            row = [random.randrange(0, 255) for _ in range(col_num)]
             writer.writerow(row)
-    
+
     party_1_file = "/tmp/train_party_1.csv"
     with open(party_1_file, "w") as f:
         writer = csv.writer(f)
-        for i in range(row_num):
-            row = []
-            for j in range(col_num):
-                row.append(random.randrange(0, 255))
+        for _ in range(row_num):
+            row = [random.randrange(0, 255) for _ in range(col_num)]
             writer.writerow(row)
 
 

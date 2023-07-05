@@ -10,15 +10,14 @@ def run_mpc_party(party_id, expr, col_owner, col_dtype,
                   col_val, party_addr, reveal_party):
     log_prefix=os.environ.get('LOG_PREFIX')
     log_dir=os.environ.get('LOG_DIR')
-    if log_prefix==None:
+    if log_prefix is None:
         log_prefix="No Config"
-    if log_dir==None:
+    if log_dir is None:
         log_dir="No Config"
-    else:
-        if os.path.exists(log_dir)== False:
-            os.mkdir(log_dir)
+    elif os.path.exists(log_dir)== False:
+        os.mkdir(log_dir)
     mpc_exec = pybind_mpc.MPCExpressExecutor(party_id,log_prefix,log_dir)
-        
+
     mpc_exec.import_column_config(col_owner, col_dtype)
     mpc_exec.import_express(expr)
 
@@ -27,9 +26,7 @@ def run_mpc_party(party_id, expr, col_owner, col_dtype,
 
     mpc_exec.evaluate(party_addr[0], party_addr[1],
                       party_addr[2], party_addr[3])
-    result = mpc_exec.reveal_mpc_result(reveal_party)
-
-    return result
+    return mpc_exec.reveal_mpc_result(reveal_party)
 
 
 def mpc_run_without_grpc():
@@ -65,10 +62,10 @@ def mpc_run_without_grpc():
         res_file=os.environ.get('RES_FILE')
         env_dict['res_file']=res_file
 
-        
+
         # data_name_A=os.environ.get('DATA_NAME_A')
         # env_dict['data_name_A']=data_name_A
-        
+
         # data_name_B=os.environ.get('DATA_NAME_B')
         # env_dict['data_name_B']=data_name_B
 
@@ -77,7 +74,7 @@ def mpc_run_without_grpc():
 
         # res_file=os.environ.get('RES_FILE')
         # env_dict['res_file']=res_file
-        
+
         with open(data_name,'r') as csvfile:
             f_csv = csv.reader(csvfile)
             headers=next(f_csv)
@@ -93,9 +90,9 @@ def mpc_run_without_grpc():
 
         mpc_result = run_mpc_party(party_id, expr, col_owner, col_dtype,
                   party_cols, party_addr, reveal_party)
-        
+
         headers = ['mpc_result']
-        res_file=str(party_id)+'_'+res_file
+        res_file = f'{party_id}_{res_file}'
         with open(res_file, 'w') as f:
             f_csv = csv.writer(f)
             f_csv.writerow(headers)

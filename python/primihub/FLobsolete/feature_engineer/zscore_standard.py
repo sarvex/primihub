@@ -31,8 +31,7 @@ class ZscoreStandard():
         if isinstance(idxs, int):
             return [idxs, ]
         elif isinstance(idxs, (tuple, list)):
-            idxs = list(idxs)
-            idxs.sort()
+            idxs = sorted(idxs)
             return idxs
         else:
             raise ValueError("idxs may be int | list | tuple")

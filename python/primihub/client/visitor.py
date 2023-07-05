@@ -30,7 +30,7 @@ class Visitor(object):
 
     def visit_file(self):
         cur_path = sys.argv[0]
-        print("current file path is: %s" % cur_path)
+        print(f"current file path is: {cur_path}")
         with open(cur_path) as f:
             code = f.read()
         node = ast.parse(code)
@@ -54,10 +54,7 @@ class Visitor(object):
         node = RemoteExecuteTransformer().visit(node)
         # fix locations
         node = ast.fix_missing_locations(node)
-        # print("Here are the extracted content:")
-        code_str = ast.unparse(node)
-        # print(code_str)
-        return code_str
+        return ast.unparse(node)
 
 # ast transformer
 
@@ -96,12 +93,12 @@ class CLiTransformer(ast.NodeTransformer):
         """
         for name in [a.name for a in node.names]:
             print("name: ", name)
-            if "primihub_cli" == name:
+            if name == "PrimihubClient":
+                print("removing `from primihub.client import PrimihubClient`")
+                node = None
+            elif name == "primihub_cli":
                 print(
                     "removing `from primihub.client.client import primihub_cli as cli`")
-                node = None
-            if "PrimihubClient" == name:
-                print("removing `from primihub.client import PrimihubClient`")
                 node = None
             return node
 
@@ -115,11 +112,11 @@ class CLiTransformer(ast.NodeTransformer):
         """
 
         for name in [a.name for a in node.names]:
-            if "visitor" == name:
-                print("removing `import visitor`")
-                node = None
-            if "primihub.client" == name:
+            if name == "primihub.client":
                 print("removing `import primihub_client`")
+                node = None
+            elif name == "visitor":
+                print("removing `import visitor`")
                 node = None
             return node
 

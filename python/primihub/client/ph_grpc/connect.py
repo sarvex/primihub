@@ -50,5 +50,3 @@ class GRPCConnect(object):
 
         if cert is not None:
             self.cert = cert
-            # TODO
-            pass

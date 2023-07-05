@@ -121,5 +121,5 @@ class DataServiceClient(GRPCConnect):
         """
         with self.channel:
             reply = self.stub.NewDataset(request)
-            print("reply : %s" % reply)
+            print(f"reply : {reply}")
             return reply

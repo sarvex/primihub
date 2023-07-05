@@ -49,12 +49,7 @@ class LogisticRegressionClient(BaseModel):
 
         # client init
         method = self.common_params['method']
-        if method == 'Plaintext':
-            client = Plaintext_Client(x, y,
-                                      self.common_params['learning_rate'],
-                                      self.common_params['alpha'],
-                                      server_channel)
-        elif method == 'DPSGD':
+        if method == 'DPSGD':
             client = DPSGD_Client(x, y,
                                   self.common_params['learning_rate'],
                                   self.common_params['alpha'],
@@ -67,6 +62,11 @@ class LogisticRegressionClient(BaseModel):
                                      self.common_params['learning_rate'],
                                      self.common_params['alpha'],
                                      server_channel)
+        elif method == 'Plaintext':
+            client = Plaintext_Client(x, y,
+                                      self.common_params['learning_rate'],
+                                      self.common_params['alpha'],
+                                      server_channel)
         else:
             error_msg = f"Unsupported method: {method}"
             logger.error(error_msg)
@@ -101,7 +101,7 @@ class LogisticRegressionClient(BaseModel):
         global_epoch = self.common_params['global_epoch']
         for i in range(global_epoch):
             logger.info(f"-------- global epoch {i+1} / {global_epoch} --------")
-            
+
             local_epoch = self.common_params['local_epoch']
             for j in range(local_epoch):
                 logger.info(f"-------- local epoch {j+1} / {local_epoch} --------")
@@ -117,15 +117,14 @@ class LogisticRegressionClient(BaseModel):
 
         # send final epsilon when using DPSGD
         if method == 'DPSGD':
-            delta = self.common_params['delta']
             steps = global_epoch * local_epoch * num_examples // batch_size
+            delta = self.common_params['delta']
             eps = client.compute_epsilon(steps, batch_size, delta)
             server_channel.send("eps", eps)
             logger.info(f"For delta={delta}, the current epsilon is {eps}")
-        # receive plaintext model when using Paillier
         elif method == 'Paillier':
             client.model.set_theta(server_channel.recv("server_model"))
-        
+
         # send final metrics
         client.send_metrics(x, y)
 
@@ -155,8 +154,7 @@ class LogisticRegressionClient(BaseModel):
         origin_data = read_data(data_info=self.role_params['data'])
 
         x = origin_data.copy()
-        selected_column = modelFile['selected_column']
-        if selected_column:
+        if selected_column := modelFile['selected_column']:
             x = x[selected_column]
         id = modelFile['id']
         if id in x.columns:
@@ -186,7 +184,7 @@ class LogisticRegressionClient(BaseModel):
             'pred_prob': pred_prob,
             'pred_y': pred_y
         })
-        
+
         data_result = pd.concat([origin_data, result], axis=1)
         predict_path = self.role_params['predict_path']
         check_directory_exist(predict_path)
@@ -224,15 +222,14 @@ class Plaintext_Client:
 
         self.server_channel.send('output_dim', output_dim)
         output_dim = self.server_channel.recv('output_dim')
-        
+
         # init theta
         if self.model.multiclass:
             if output_dim != self.model.theta.shape[1]:
                 self.model.theta = np.zeros((self.model.theta.shape[0], output_dim))
-        else:
-            if output_dim > 1:
-                self.model.theta = np.zeros((self.model.theta.shape[0], output_dim))
-                self.model.multiclass = True
+        elif output_dim > 1:
+            self.model.theta = np.zeros((self.model.theta.shape[0], output_dim))
+            self.model.multiclass = True
 
     def send_params(self):
         self.server_channel.send('num_examples', self.num_examples)
@@ -259,12 +256,11 @@ class Plaintext_Client:
         return y_hat, acc
     
     def get_auc(self, y_hat, y):
-        if self.model.multiclass:
-            # one-vs-rest
-            auc = metrics.roc_auc_score(y, y_hat, multi_class='ovr') 
-        else:
-            auc = metrics.roc_auc_score(y, y_hat)
-        return auc
+        return (
+            metrics.roc_auc_score(y, y_hat, multi_class='ovr')
+            if self.model.multiclass
+            else metrics.roc_auc_score(y, y_hat)
+        )
 
     def send_metrics(self, x, y):
         loss = self.send_loss(x, y)

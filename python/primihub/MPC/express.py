@@ -63,8 +63,7 @@ class MPCExpressServiceClient:
     def start_task(remote_addr: string, msg: express_pb2.MPCExpressRequest):
         conn = grpc.insecure_channel(remote_addr)
         stub = express_pb2_grpc.MPCExpressTaskStub(channel=conn)
-        response = stub.TaskStart(msg)
-        return response
+        return stub.TaskStart(msg)
 
     @staticmethod
     def stop_task(remote_addr: string, job_id: string):
@@ -72,8 +71,7 @@ class MPCExpressServiceClient:
         request.jobid = job_id
         conn = grpc.insecure_channel(remote_addr)
         stub = express_pb2_grpc.MPCExpressTaskStub(channel=conn)
-        response = stub.TaskStop(request)
-        return response
+        return stub.TaskStop(request)
 
 
 def stop_mpc_task():
@@ -86,7 +84,7 @@ def submit_mpc_task():
     generator = MPCExpressRequestGenerator()
 
     jobid = "202002280915402308774"
-    filename = "/tmp/mpc_{}_result.csv".format(jobid)
+    filename = f"/tmp/mpc_{jobid}_result.csv"
 
     # Generate request for party 0.
     generator.set_party_id(0)
@@ -179,8 +177,7 @@ class MYSQLOperator:
         try:
             sql = 'SELECT * FROM mpc_task where jobid=%s;'
             cursor.execute(sql, jobid)
-            status = cursor.fetchone()[2]
-            return status
+            return cursor.fetchone()[2]
         except Exception as e:
             print("error:\n", e)
 
@@ -237,7 +234,7 @@ class MPCExpressService(express_pb2_grpc.MPCExpressTaskServicer):
         response = express_pb2.MPCExpressResponse()
         response.jobid = request.jobid
         response.status = express_pb2.TaskStatus.TASK_RUNNING
-        response.message = "New pid is {}".format(p.pid)
+        response.message = f"New pid is {p.pid}"
 
         return response
 
@@ -247,21 +244,18 @@ class MPCExpressService(express_pb2_grpc.MPCExpressTaskServicer):
         if proc is None:
             response = express_pb2.MPCExpressResponse()
             response.jobid = request.jobid
-            response.message = "Can't find subprocess with jobid {}".format(
-                jobid)
-            return response
+            response.message = f"Can't find subprocess with jobid {jobid}"
         else:
             response = express_pb2.MPCExpressResponse()
             if proc.is_alive():
                 proc.kill()
-                response.message = "Subprocess for jobid {} quit now.".format(
-                    jobid)
+                response.message = f"Subprocess for jobid {jobid} quit now."
             else:
-                response.message = "Subprocess for jobid {} quit before.".format(
-                    jobid)
+                response.message = f"Subprocess for jobid {jobid} quit before."
             self.mysql_op.TaskStop(jobid)
             response.jobid = request.jobid
-            return response
+
+        return response
 
     def TaskStatus(self, request, response):
         pass
@@ -288,8 +282,7 @@ class MPCExpressService(express_pb2_grpc.MPCExpressTaskServicer):
         mpc_exec.evaluate(party_addr[0], party_addr[1],
                           party_addr[2], party_addr[3])
 
-        result = mpc_exec.reveal_mpc_result(reveal_party)
-        if result:
+        if result := mpc_exec.reveal_mpc_result(reveal_party):
             with open(output_file_path, "w") as f:
                 writer = csv.writer(f)
                 writer.writerow([expr])

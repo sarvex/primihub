@@ -79,7 +79,7 @@ class Listener(Generic[CTXType]):
             self.add_ctx(ctx)
             return ctx
 
-        if cid in self.ctxs and update_existing:
+        if update_existing:
             ctx = self.ctxs[cid]
             ctx.scope.update(scope)
             return ctx
@@ -233,4 +233,4 @@ class Listener(Generic[CTXType]):
         #     self.exit()
 
     def __repr__(self) -> str:
-        return "{}(routes_count={})".format(self.__class__.__name__, len(self.routes))
+        return f"{self.__class__.__name__}(routes_count={len(self.routes)})"

@@ -135,10 +135,7 @@ class PrimihubClient(object):
         logger.info("*** cli start ***")
         try:
             self.loop.run_forever()
-        except (KeyboardInterrupt, SystemExit) as e:
-            logger.debug(str(e))
-            self.exit()
-        except Exception as e:
+        except (KeyboardInterrupt, SystemExit, Exception) as e:
             logger.debug(str(e))
             self.exit()
 
@@ -169,8 +166,7 @@ class PrimihubClient(object):
         n = 0
         while self.notify_channel_connected is False:
             n += 1
-            logger.debug(
-                "----- waiting notify channel connected {}".format("▒" * int(n)))
+            logger.debug(f'----- waiting notify channel connected {"▒" * n}')
             logger.debug(n)
             await asyncio.sleep(n)  # 50ms
 
@@ -185,7 +181,7 @@ class PrimihubClient(object):
         logger.debug("╔═" + "=" * 60 + "═╗")
         logger.debug(self.code)
         logger.debug("╚═" + "=" * 60 + "═╝")
-        ph_context_str = "ph.context.Context.func_params_map = %s" % func_params_map
+        ph_context_str = f"ph.context.Context.func_params_map = {func_params_map}"
         self.code += "\n"
         self.code += ph_context_str
         logger.info("-*-" * 25)
@@ -207,13 +203,12 @@ class PrimihubClient(object):
             logger.info("grpc submit end.")
 
     def async_remote_execute(self, *args) -> None:
-        job_id = "job:" + uuid.uuid1().hex
+        job_id = f"job:{uuid.uuid1().hex}"
         # task_id = uuid.uuid1().hex
         client_id = self.client_id
         logger.debug("------- create task: async submit task -----------")
-        logger.debug("job_id: {}, type: {}".format(job_id, type(job_id)))
-        logger.debug("client_id: {}, type: {}".format(
-            client_id, type(client_id)))
+        logger.debug(f"job_id: {job_id}, type: {type(job_id)}")
+        logger.debug(f"client_id: {client_id}, type: {type(client_id)}")
 
         logger.debug("------- async run submit task -----------")
         try:

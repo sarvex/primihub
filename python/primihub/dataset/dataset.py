@@ -34,7 +34,7 @@ from torchvision.io import read_image
 from torch.utils.data import Dataset as TorchDataset
 
 def register_dataset(service_addr, driver, path, name):
-    logger.info("Dataset service is {}.".format(service_addr))
+    logger.info(f"Dataset service is {service_addr}.")
     # ip:port:use_tls:role
     server_info = service_addr.split(":")
     if len(server_info) < 3:
@@ -79,10 +79,11 @@ def register_dataset(service_addr, driver, path, name):
     response = stub.NewDataset(request)
     if response.ret_code != 0:
         logger.error("Register dataset {} failed.".foramt(name));
-        raise RuntimeError("Register dataset {} failed.".format(name))
+        raise RuntimeError(f"Register dataset {name} failed.")
     else:
-        logger.info("Register dataset {} finish, dataset url is {}.".format(
-            name, response.dataset_url))
+        logger.info(
+            f"Register dataset {name} finish, dataset url is {response.dataset_url}."
+        )
 
 
 class DataDriver(abc.ABC):
@@ -310,6 +311,4 @@ def get(dataset_ref: DatasetRef) -> pd.DataFrame:
     # FIXME use primihub cli client
     # dataset_client = DatasetClientFactory.create("flight", "192.168.99.23:50050", "")
     dataset_client = DatasetClientFactory.create("flight", primihub_cli.node, primihub_cli.cert)
-    # get dataset use dataset id.
-    df_data = dataset_client.do_get(dataset_ref.dataset_name)
-    return df_data
+    return dataset_client.do_get(dataset_ref.dataset_name)

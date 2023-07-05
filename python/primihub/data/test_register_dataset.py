@@ -49,10 +49,11 @@ def register_dataset(ip, port, use_tls, driver, path, name):
     response = stub.NewDataset(request)
     if response.ret_code != 0:
         logger.error("Register dataset {} failed.".foramt(name));
-        raise RuntimeError("Register dataset {} failed.".format(name))
+        raise RuntimeError(f"Register dataset {name} failed.")
     else:
-        logger.info("Register dataset {} finish, dataset url is {}.".format(
-            name, response.dataset_url))
+        logger.info(
+            f"Register dataset {name} finish, dataset url is {response.dataset_url}."
+        )
         
 
 array = np.random.uniform(0, 100, (10,10))
@@ -62,7 +63,7 @@ name = ''
 for char in char_list:
     name = name + char
 
-path = "/tmp/{}.csv".format(name)
+path = f"/tmp/{name}.csv"
 np.savetxt(path, array, delimiter=",")
 
 service_addr = ph.context.Context.params_map["DatasetServiceAddr"]

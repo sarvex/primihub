@@ -84,10 +84,10 @@ class TorchImageDataset(TorchDataset):
         self.transform = transform
         self.target_transform = target_transform
 
-        img_type = ['jpeg', 'png']
         if annotations_file:
             self.img_labels = pd.read_csv(annotations_file)
         else:
+            img_type = ['jpeg', 'png']
             file_name = [
                 f for f in os.listdir(self.img_dir)
                 if imghdr.what(os.path.join(self.img_dir, f)) in img_type
@@ -104,14 +104,13 @@ class TorchImageDataset(TorchDataset):
         image = read_image(img_path)
         if self.transform:
             image = self.transform(image)
-        
-        if 'y' in self.img_labels.columns:
-            label = self.img_labels.loc[idx, 'y']
-            if self.target_transform:
-                label = self.target_transform(label)
-            return image, label
-        else:
+
+        if 'y' not in self.img_labels.columns:
             return image
+        label = self.img_labels.loc[idx, 'y']
+        if self.target_transform:
+            label = self.target_transform(label)
+        return image, label
 
 
 class DataLoader:
@@ -143,8 +142,7 @@ class DataLoader:
 
         start = self.start
         end = start + self.batch_size
-        if end > self.n_samples:
-            end = self.n_samples
+        end = min(end, self.n_samples)
         self.start += self.batch_size
 
         if start < self.n_samples:

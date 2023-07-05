@@ -107,7 +107,7 @@ def _get_field_mapping(pb, dict_value, strict):
             continue
         if key not in pb.DESCRIPTOR.fields_by_name:
             if strict:
-                raise KeyError("%s does not have a field called %s" % (pb, key))
+                raise KeyError(f"{pb} does not have a field called {key}")
             continue
         field_mapping.append((pb.DESCRIPTOR.fields_by_name[key], value, getattr(pb, key, None)))
 
@@ -119,7 +119,8 @@ def _get_field_mapping(pb, dict_value, strict):
         if ext_num not in pb._extensions_by_number:
             if strict:
                 raise KeyError(
-                    "%s does not have a extension with number %s. Perhaps you forgot to import it?" % (pb, key))
+                    f"{pb} does not have a extension with number {key}. Perhaps you forgot to import it?"
+                )
             continue
         ext_field = pb._extensions_by_number[ext_num]
         pb_val = None
@@ -167,5 +168,7 @@ def _string_to_enum(field, input_value):
     try:
         input_value = enum_dict[input_value].number
     except KeyError:
-        raise KeyError("`%s` is not a valid value for field `%s`" % (input_value, field.name))
+        raise KeyError(
+            f"`{input_value}` is not a valid value for field `{field.name}`"
+        )
     return input_value

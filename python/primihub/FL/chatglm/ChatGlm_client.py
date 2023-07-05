@@ -77,8 +77,8 @@ class ChatGlmClient(BaseModel):
             time.sleep(5)  #for save
             import torch
             prefix_state_dict = torch.load(
-                os.path.join(path + "/" + ptuning_checkpoint,
-                             "pytorch_model.bin"))
+                os.path.join(f"{path}/{ptuning_checkpoint}", "pytorch_model.bin")
+            )
             del torch
 
             self.channel.send(f'client_res_{i}', prefix_state_dict)
@@ -86,8 +86,8 @@ class ChatGlmClient(BaseModel):
             import torch
             torch.save(
                 res,
-                os.path.join(path + "/" + ptuning_checkpoint,
-                             "pytorch_model.bin"))
+                os.path.join(f"{path}/{ptuning_checkpoint}", "pytorch_model.bin"),
+            )
             del torch
 
     def predict(self):

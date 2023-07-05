@@ -169,18 +169,15 @@ class Plaintext_Server:
 
     def client_model_aggregate(self):
         client_models = self.client_channel.recv_all('client_model')
-        
+
         server_model = self.model.state_dict()
         for layer in server_model:
-            clayers = []
-            for cmodel in client_models:
-                clayers.append(cmodel[layer])
-
+            clayers = [cmodel[layer] for cmodel in client_models]
             server_model[layer] = torch.stack(clayers,
                                               dim=len(server_model[layer].size())) \
-                                    @ self.num_examples_weights \
-                                    / self.num_examples_weights_sum
-        
+                                        @ self.num_examples_weights \
+                                        / self.num_examples_weights_sum
+
         self.model.load_state_dict(server_model)
 
     def server_model_broadcast(self, prefix=''):

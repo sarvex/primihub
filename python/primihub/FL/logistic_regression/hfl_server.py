@@ -31,7 +31,7 @@ class LogisticRegressionServer(BaseModel):
 
         # server init
         method = self.common_params['method']
-        if method == 'Plaintext' or method == 'DPSGD':
+        if method in ['Plaintext', 'DPSGD']:
             server = Plaintext_DPSGD_Server(self.common_params['alpha'],
                                             client_channel)
         elif method == 'Paillier':
@@ -47,7 +47,7 @@ class LogisticRegressionServer(BaseModel):
         # minmaxscaler
         data_max = client_channel.recv_all('data_max')
         data_min = client_channel.recv_all('data_min')
-        
+
         data_max = np.array(data_max).max(axis=0)
         data_min = np.array(data_min).min(axis=0)
 
@@ -60,7 +60,7 @@ class LogisticRegressionServer(BaseModel):
         for i in range(global_epoch):
             logger.info(f"-------- global epoch {i+1} / {global_epoch} --------")
             server.train()
-        
+
             # print metrics
             if self.common_params['print_metrics']:
                 server.print_metrics()
@@ -106,11 +106,7 @@ class Plaintext_DPSGD_Server:
 
         # set final output dim
         output_dim = max(Output_Dims)
-        if output_dim == 1:
-            self.multiclass = False
-        else:
-            self.multiclass = True
-
+        self.multiclass = output_dim != 1
         # send output dim to all clients
         self.client_channel.send_all("output_dim", output_dim)
 
@@ -174,14 +170,11 @@ class Plaintext_DPSGD_Server:
         return fpr, tpr
 
     def get_metrics(self):
-        server_metrics = {}
-
         loss = self.get_loss()
-        server_metrics["train_loss"] = loss
-
+        server_metrics = {"train_loss": loss}
         acc = self.get_scalar_metrics('acc')
         server_metrics["train_acc"] = acc
-        
+
         if self.multiclass:
             auc = self.get_scalar_metrics('auc')
             server_metrics["train_auc"] = auc
